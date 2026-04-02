@@ -5,6 +5,9 @@ import TableView from "./pages/TableView";
 import QueryEditor from "./pages/QueryEditor";
 import SchemaBuilder from "./pages/SchemaBuilder";
 
+import Settings from "./pages/Settings";
+import Pipelines from "./pages/Pipelines";
+
 function App() {
   return (
     <BrowserRouter>
@@ -14,6 +17,8 @@ function App() {
           <Route path="tables" element={<TableView />} />
           <Route path="query" element={<QueryEditor />} />
           <Route path="schema" element={<SchemaBuilder />} />
+          <Route path="pipelines" element={<Pipelines />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>

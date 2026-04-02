@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Play, Download, ExternalLink, ListFilter, BarChart, Database, RefreshCw, ChevronRight, ChevronDown, Key, FileText, CalendarDays } from "lucide-react";
 import { Group, Panel } from "react-resizable-panels";
+import TopNavBar from "@/components/layout/TopNavBar";
 
 export default function QueryEditor() {
   const [activeTab, setActiveTab] = useState("user_retention.sql");
@@ -37,8 +38,9 @@ export default function QueryEditor() {
   ];
 
   return (
-
-      <Group orientation="horizontal" className="flex h-full w-full">
+    <div className="flex-1 flex flex-col h-full bg-background">
+      <TopNavBar />
+      <Group orientation="horizontal" className="flex-1 w-full">
         {/* Left Pane: Schema Explorer */}
         <Panel collapsible defaultSize={20} minSize={"20%"} maxSize={"30%"}>
           {/* NEW QUERY */}
@@ -210,5 +212,6 @@ export default function QueryEditor() {
           </Group>
         </Panel>
       </Group>
+    </div>
   );
 }

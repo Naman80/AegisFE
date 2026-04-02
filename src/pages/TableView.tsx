@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/features/TableView/StatusBadge";
 import { Card } from "@/components/ui/Card";
+import TopNavBar from "@/components/layout/TopNavBar";
 import type { UserRow } from "@/types";
 
 const MOCK_USERS: UserRow[] = [
@@ -15,6 +16,7 @@ const MOCK_USERS: UserRow[] = [
 export default function TableView() {
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
+      <TopNavBar />
       {/* Table Toolbar */}
       <section className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-surface-container-high bg-background shrink-0">
         <div className="flex items-center gap-3">

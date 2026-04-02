@@ -8,6 +8,7 @@ import {
   Sparkles, X, PlusCircle
 } from "lucide-react";
 import { Group, Panel, useDefaultLayout } from "react-resizable-panels";
+import TopNavBar from "@/components/layout/TopNavBar";
 
 export default function SchemaBuilder() {
 
@@ -26,8 +27,9 @@ export default function SchemaBuilder() {
   // ];
 
   return (
-    <div className="flex w-full h-full relative">
-      <Group orientation="horizontal"  defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
+    <div className="flex flex-col w-full h-full relative">
+      <TopNavBar />
+      <Group className="flex-1" orientation="horizontal"  defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
         {/* Left Pane: Tables List */}
         <Panel collapsible defaultSize={20} minSize={"20%"} maxSize={"25%"} className="bg-surface-container-lowest flex flex-col border-r border-surface-container-high z-10 shrink-0">
           <div className="p-4 shrink-0">

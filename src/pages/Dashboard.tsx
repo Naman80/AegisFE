@@ -3,6 +3,7 @@ import { BentoCard } from "@/components/features/Dashboard/BentoCard";
 import { QueryListItem } from "@/components/features/Dashboard/QueryListItem";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import TopNavBar from "@/components/layout/TopNavBar";
 import type { Query, TableSummary, PipelineStatus, SystemMetric } from "@/types";
 
 const MOCK_STATS: SystemMetric[] = [
@@ -38,7 +39,9 @@ const MOCK_PIPELINES: PipelineStatus[] = [
 
 export default function Dashboard() {
   return (
-    <div className="p-10 space-y-10">
+    <>
+      <TopNavBar />
+      <div className="p-10 space-y-10">
       {/* Hero / Quick Stats Section */}
       <section>
         <div className="flex justify-between items-end mb-6">
@@ -192,6 +195,7 @@ export default function Dashboard() {
           </Card>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

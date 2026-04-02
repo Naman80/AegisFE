@@ -61,3 +61,20 @@ export interface QueryResult {
   timeMs?: number;
   rowCount?: number;
 }
+
+// React Flow Compatible Types for Pipelines
+export interface PipelineNode<T = any> {
+  id: string;
+  type: string;
+  position: { x: number; y: number };
+  data: T;
+}
+
+export interface PipelineEdge {
+  id: string;
+  source: string;
+  target: string;
+  type?: string;
+  animated?: boolean;
+  style?: React.CSSProperties;
+}

@@ -63,7 +63,7 @@ export default function Sidebar() {
           <span>Docs</span>
         </a>
         <a
-          className="flex items-center gap-3 px-4 py-2 text-on-surface-variant opacity-70 hover:bg-surface-container hover:text-on-surface transition-all duration-200 text-error"
+          className="flex items-center gap-3 px-4 py-2 text-on-surface-variant opacity-70 hover:bg-surface-container hover:text-on-surface transition-all duration-200"
           href="#"
         >
           <span className="material-symbols-outlined">logout</span>
