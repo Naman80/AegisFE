@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aegis Studio | Data Grid</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-variant": "#353534",
+            "on-tertiary-fixed-variant": "#005142",
+            "surface-bright": "#3a3939",
+            "secondary-fixed": "#e5e2e1",
+            "secondary": "#c8c6c5",
+            "primary": "#adc6ff",
+            "on-surface": "#e5e2e1",
+            "on-tertiary": "#00382d",
+            "on-error-container": "#ffdad6",
+            "surface-container-low": "#1c1b1b",
+            "on-primary-fixed": "#001a41",
+            "on-error": "#690005",
+            "surface-container-high": "#2a2a2a",
+            "on-secondary-fixed": "#1c1b1b",
+            "surface-container-lowest": "#0e0e0e",
+            "background": "#131313",
+            "surface-tint": "#adc6ff",
+            "on-secondary-container": "#bab8b7",
+            "error": "#ffb4ab",
+            "tertiary-fixed-dim": "#48ddbc",
+            "tertiary": "#48ddbc",
+            "on-primary-container": "#ffffff",
+            "secondary-container": "#4a4949",
+            "outline": "#8b90a0",
+            "surface": "#131313",
+            "tertiary-container": "#00866f",
+            "error-container": "#93000a",
+            "primary-fixed": "#d8e2ff",
+            "on-surface-variant": "#c1c6d7",
+            "outline-variant": "#414754",
+            "on-background": "#e5e2e1",
+            "on-primary": "#002e69",
+            "on-primary-fixed-variant": "#004493",
+            "on-secondary": "#313030",
+            "inverse-primary": "#005bc1",
+            "surface-container-highest": "#353534",
+            "on-tertiary-container": "#ffffff",
+            "primary-fixed-dim": "#adc6ff",
+            "tertiary-fixed": "#6bfad8",
+            "primary-container": "#0071ee",
+            "surface-dim": "#131313",
+            "inverse-surface": "#e5e2e1",
+            "on-tertiary-fixed": "#002019",
+            "surface-container": "#201f1f",
+            "on-secondary-fixed-variant": "#474646",
+            "inverse-on-surface": "#313030",
+            "secondary-fixed-dim": "#c8c6c5"
+          },
+          fontFamily: {
+            "headline": ["Inter"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+        },
+      },
+    }
+  </script>
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #111111; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #353534; }
+    .grid-cell:focus-within { background-color: #1c1b1b; box-shadow: inset 0 0 0 1px #0071ee4d; }
+  </style>
+</head>
+<body class="text-on-surface antialiased overflow-hidden flex">
+<!-- SideNavBar Anchor -->
+<aside class="h-screen w-64 border-r border-[#2a2a2a] bg-[#0e0e0e] flex flex-col py-4 space-y-2 shrink-0">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container text-lg">schema</span>
+</div>
+<div>
+<h1 class="text-xl font-black text-[#e5e2e1] leading-none">Aegis Studio</h1>
+<p class="text-[10px] font-medium tracking-wide text-on-surface-variant opacity-70 uppercase mt-1">AI-Native DB</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium tracking-wide">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">code</span>
+<span class="text-sm font-medium tracking-wide">Query Editor</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">schema</span>
+<span class="text-sm font-medium tracking-wide">Schema</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#adc6ff] border-r-2 border-[#0071ee] bg-[#131313] transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">table_chart</span>
+<span class="text-sm font-medium tracking-wide">Tables</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">account_tree</span>
+<span class="text-sm font-medium tracking-wide">Pipelines</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium tracking-wide">Settings</span>
+</a>
+</nav>
+<div class="px-3 mt-auto space-y-1">
+<button class="w-full mb-4 py-2 px-4 bg-primary-container text-on-primary-container rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+        New Query
+      </button>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">menu_book</span>
+<span class="text-sm font-medium tracking-wide">Docs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="text-sm font-medium tracking-wide">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col min-w-0 bg-[#111111]">
+<!-- TopNavBar Anchor -->
+<header class="w-full h-14 border-b border-[#2a2a2a] bg-[#131313] flex justify-between items-center px-6 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<nav class="flex items-center gap-6">
+<span class="text-[#adc6ff] font-medium text-sm">Workspaces</span>
+<span class="material-symbols-outlined text-on-surface-variant text-xs">chevron_right</span>
+<span class="text-[#e5e2e1] font-bold text-sm">Production_Cluster_V2</span>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-lg">search</span>
+<input class="bg-[#1c1b1b] border-none text-sm rounded-lg pl-10 pr-4 py-1.5 w-64 focus:ring-1 focus:ring-primary/30 text-on-surface outline-none" placeholder="Search tables..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-1.5 rounded-lg hover:bg-[#2a2a2a] transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-[#2a2a2a] transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden ml-2 border border-[#2a2a2a]">
+<img alt="User profile" data-alt="Close-up of a professional developer with neutral expression in a high-tech dimly lit office environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhrASmyIcJGKXVTE_ZOC8x4WW4J1w8qpXQJhroaapa_Q2qui8Ljcee_k5iqEdrjWiuCGbIOaHJMcEztccyaS5xrBKB3rAh0jC6orip5Rzz7CH-XBCE6V35qzRwPSZCndnqK731oeVvBRz2dUIk1KWuRLb61vatp5IIloh8PePYb_I2MmUHR1Evujk-7wQeTNfpuK6_TrI8mJFoUh5Ptdk8iJ5BJ8T55IO1j2iG20bY3PI390H9a4mH-fhEfthuEFNM03EZZ2S4dg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Table Toolbar -->
+<section class="px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="flex bg-[#1c1b1b] p-1 rounded-lg">
+<button class="px-3 py-1.5 rounded-md bg-[#2a2a2a] text-xs font-semibold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">table_rows</span>
+            Data View
+          </button>
+<button class="px-3 py-1.5 rounded-md hover:bg-[#2a2a2a]/50 text-xs font-medium text-on-surface-variant flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm">analytics</span>
+            Schema View
+          </button>
+</div>
+<div class="h-6 w-px bg-[#2a2a2a] mx-2"></div>
+<button class="px-3 py-1.5 rounded-lg border border-[#2a2a2a] text-xs font-medium text-on-surface hover:bg-[#2a2a2a] flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+          Filter
+        </button>
+<button class="px-3 py-1.5 rounded-lg border border-[#2a2a2a] text-xs font-medium text-on-surface hover:bg-[#2a2a2a] flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm">swap_vert</span>
+          Sort
+        </button>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+          Add Row
+        </button>
+</div>
+</section>
+<!-- Data Grid Wrapper -->
+<div class="flex-1 px-6 pb-6 overflow-hidden flex flex-col">
+<div class="flex-1 overflow-auto custom-scrollbar border border-[#2a2a2a] rounded-xl bg-[#131313]">
+<table class="w-full text-left border-collapse min-w-[1000px]">
+<thead class="sticky top-0 bg-[#131313] z-10 border-b border-[#2a2a2a]">
+<tr>
+<th class="w-12 px-4 py-3 bg-[#131313]">
+<input class="w-4 h-4 rounded border-[#353534] bg-[#0e0e0e] text-primary focus:ring-0" type="checkbox"/>
+</th>
+<th class="group px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant border-r border-[#2a2a2a]/40 hover:bg-[#201f1f] cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">tag</span>ID</span>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">keyboard_arrow_down</span>
+</div>
+</th>
+<th class="group px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant border-r border-[#2a2a2a]/40 hover:bg-[#201f1f] cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">person</span>Customer Name</span>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">keyboard_arrow_down</span>
+</div>
+</th>
+<th class="group px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant border-r border-[#2a2a2a]/40 hover:bg-[#201f1f] cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">mail</span>Email</span>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">keyboard_arrow_down</span>
+</div>
+</th>
+<th class="group px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant border-r border-[#2a2a2a]/40 hover:bg-[#201f1f] cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">check_circle</span>Status</span>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">keyboard_arrow_down</span>
+</div>
+</th>
+<th class="group px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant border-r border-[#2a2a2a]/40 hover:bg-[#201f1f] cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">payments</span>LTV</span>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">keyboard_arrow_down</span>
+</div>
+</th>
+<th class="group px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant hover:bg-[#201f1f] cursor-pointer transition-colors">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-sm">calendar_month</span>Created At</span>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">keyboard_arrow_down</span>
+</div>
+</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#2a2a2a]/50">
+<!-- Row 1 -->
+<tr class="group hover:bg-[#1c1b1b] transition-colors">
+<td class="px-4 py-3"><input class="w-4 h-4 rounded border-[#353534] bg-[#0e0e0e] text-primary focus:ring-0" type="checkbox"/></td>
+<td class="px-4 py-3 font-mono text-xs text-on-surface-variant">USR-00291</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none" contenteditable="true">Alex Rivera</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none text-on-surface-variant" contenteditable="true">alex.r@studio.aegis</td>
+<td class="px-4 py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-tertiary-container/20 text-tertiary">ACTIVE</span>
+</td>
+<td class="px-4 py-3 text-sm font-mono" contenteditable="true">$12,450.00</td>
+<td class="px-4 py-3 text-sm text-on-surface-variant">Oct 12, 2023</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-[#1c1b1b] transition-colors">
+<td class="px-4 py-3"><input class="w-4 h-4 rounded border-[#353534] bg-[#0e0e0e] text-primary focus:ring-0" type="checkbox"/></td>
+<td class="px-4 py-3 font-mono text-xs text-on-surface-variant">USR-00292</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none" contenteditable="true">Sarah Chen</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none text-on-surface-variant" contenteditable="true">chen.s@gmail.com</td>
+<td class="px-4 py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-container/20 text-secondary">PENDING</span>
+</td>
+<td class="px-4 py-3 text-sm font-mono" contenteditable="true">$8,210.50</td>
+<td class="px-4 py-3 text-sm text-on-surface-variant">Oct 14, 2023</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-[#1c1b1b] transition-colors">
+<td class="px-4 py-3"><input class="w-4 h-4 rounded border-[#353534] bg-[#0e0e0e] text-primary focus:ring-0" type="checkbox"/></td>
+<td class="px-4 py-3 font-mono text-xs text-on-surface-variant">USR-00293</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none" contenteditable="true">Marcus Thorne</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none text-on-surface-variant" contenteditable="true">m.thorne@vector.io</td>
+<td class="px-4 py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-tertiary-container/20 text-tertiary">ACTIVE</span>
+</td>
+<td class="px-4 py-3 text-sm font-mono" contenteditable="true">$25,000.00</td>
+<td class="px-4 py-3 text-sm text-on-surface-variant">Oct 15, 2023</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-[#1c1b1b] transition-colors">
+<td class="px-4 py-3"><input class="w-4 h-4 rounded border-[#353534] bg-[#0e0e0e] text-primary focus:ring-0" type="checkbox"/></td>
+<td class="px-4 py-3 font-mono text-xs text-on-surface-variant">USR-00294</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none" contenteditable="true">Elena Rodriguez</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none text-on-surface-variant" contenteditable="true">elena.r@neural.ai</td>
+<td class="px-4 py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-error-container/20 text-error">SUSPENDED</span>
+</td>
+<td class="px-4 py-3 text-sm font-mono" contenteditable="true">$0.00</td>
+<td class="px-4 py-3 text-sm text-on-surface-variant">Oct 16, 2023</td>
+</tr>
+<!-- Row 5 -->
+<tr class="group hover:bg-[#1c1b1b] transition-colors">
+<td class="px-4 py-3"><input class="w-4 h-4 rounded border-[#353534] bg-[#0e0e0e] text-primary focus:ring-0" type="checkbox"/></td>
+<td class="px-4 py-3 font-mono text-xs text-on-surface-variant">USR-00295</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none" contenteditable="true">James Wilson</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none text-on-surface-variant" contenteditable="true">j.wilson@tech.co</td>
+<td class="px-4 py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-tertiary-container/20 text-tertiary">ACTIVE</span>
+</td>
+<td class="px-4 py-3 text-sm font-mono" contenteditable="true">$4,120.00</td>
+<td class="px-4 py-3 text-sm text-on-surface-variant">Oct 18, 2023</td>
+</tr>
+<!-- More rows to fill space -->
+<tr class="group hover:bg-[#1c1b1b] transition-colors">
+<td class="px-4 py-3"><input class="w-4 h-4 rounded border-[#353534] bg-[#0e0e0e] text-primary focus:ring-0" type="checkbox"/></td>
+<td class="px-4 py-3 font-mono text-xs text-on-surface-variant">USR-00296</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none" contenteditable="true">Sophia Varga</td>
+<td class="px-4 py-3 text-sm grid-cell outline-none text-on-surface-variant" contenteditable="true">s.varga@v-corp.com</td>
+<td class="px-4 py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-tertiary-container/20 text-tertiary">ACTIVE</span>
+</td>
+<td class="px-4 py-3 text-sm font-mono" contenteditable="true">$19,200.75</td>
+<td class="px-4 py-3 text-sm text-on-surface-variant">Oct 19, 2023</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<footer class="mt-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<p class="text-xs text-on-surface-variant">Showing <span class="text-on-surface font-semibold">1-25</span> of <span class="text-on-surface font-semibold">1,492</span> rows</p>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Per Page:</span>
+<select class="bg-[#1c1b1b] border-none text-[10px] font-bold rounded-lg px-2 py-1 text-on-surface focus:ring-0 cursor-pointer">
+<option>25</option>
+<option>50</option>
+<option>100</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1 rounded hover:bg-[#201f1f] text-on-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-lg">first_page</span>
+</button>
+<button class="p-1 rounded hover:bg-[#201f1f] text-on-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<div class="flex items-center gap-1 px-4">
+<span class="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary rounded">1</span>
+<span class="text-xs font-medium px-2 py-1 text-on-surface-variant hover:bg-[#201f1f] rounded cursor-pointer transition-colors">2</span>
+<span class="text-xs font-medium px-2 py-1 text-on-surface-variant hover:bg-[#201f1f] rounded cursor-pointer transition-colors">3</span>
+<span class="text-xs font-medium px-2 py-1 text-on-surface-variant">...</span>
+<span class="text-xs font-medium px-2 py-1 text-on-surface-variant hover:bg-[#201f1f] rounded cursor-pointer transition-colors">60</span>
+</div>
+<button class="p-1 rounded hover:bg-[#201f1f] text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+<button class="p-1 rounded hover:bg-[#201f1f] text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">last_page</span>
+</button>
+</div>
+</footer>
+</div>
+</main>
+<!-- SideNavBar Assistant Anchor (Aegis Assistant) -->
+<aside class="fixed right-0 top-14 h-[calc(100vh-3.5rem)] w-80 border-l border-[#2a2a2a] bg-[#131313] flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.4)] z-40">
+<div class="p-4 border-b border-[#2a2a2a]">
+<h3 class="text-md font-bold text-[#48ddbc] flex items-center gap-2">
+<span class="material-symbols-outlined">smart_toy</span>
+        Aegis Assistant
+      </h3>
+<p class="text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant mt-1">Contextual AI</p>
+</div>
+<div class="flex-1 p-4 overflow-y-auto custom-scrollbar space-y-4">
+<div class="bg-surface-container rounded-lg p-3 text-xs leading-relaxed text-on-surface border border-[#2a2a2a]">
+        I see you're looking at the <span class="text-primary font-bold">Customer_Main</span> table. There are 12 records with invalid email formats. Would you like me to generate a script to clean them?
+      </div>
+<div class="bg-[#1c1b1b] border border-[#2a2a2a] rounded-lg p-3">
+<p class="text-[10px] font-bold text-tertiary mb-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">bolt</span>
+          Suggested Insights
+        </p>
+<ul class="space-y-2">
+<li class="text-[11px] text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center gap-2">
+<span class="w-1 h-1 rounded-full bg-tertiary"></span>
+            LTV growth by segment (Oct)
+          </li>
+<li class="text-[11px] text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center gap-2">
+<span class="w-1 h-1 rounded-full bg-tertiary"></span>
+            Churn risk: Low activity users
+          </li>
+</ul>
+</div>
+</div>
+<div class="p-4 border-t border-[#2a2a2a]">
+<div class="relative">
+<input class="w-full bg-[#1c1b1b] border-none text-xs rounded-lg py-2.5 pl-3 pr-10 focus:ring-1 focus:ring-tertiary/30 outline-none" placeholder="Ask Aegis..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-tertiary">
+<span class="material-symbols-outlined text-lg">send</span>
+</button>
+</div>
+</div>
+</aside>
+</body></html>
