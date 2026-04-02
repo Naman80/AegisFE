@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopNavBar from "./TopNavBar";
-import AegisAssistant from "./AegisAssistant";
+// import AegisAssistant from "./AegisAssistant";
 
 export default function AppLayout() {
   return (
@@ -13,7 +13,7 @@ export default function AppLayout() {
           <Outlet />
         </div>
       </main>
-      <AegisAssistant />
+      {/* <AegisAssistant /> */}
     </div>
   );
 }

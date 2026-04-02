@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { path: "/", icon: "dashboard", label: "Dashboard" },
-  { path: "/query-editor", icon: "code", label: "Query Editor" },
+  { path: "/query", icon: "code", label: "Query Editor" },
   { path: "/schema", icon: "schema", label: "Schema" },
   { path: "/tables", icon: "table_chart", label: "Tables" },
   { path: "/pipelines", icon: "account_tree", label: "Pipelines" },

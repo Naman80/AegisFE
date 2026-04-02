@@ -14,7 +14,7 @@ const MOCK_USERS: UserRow[] = [
 
 export default function TableView() {
   return (
-    <div className="flex-1 flex flex-col h-full bg-background pr-80">
+    <div className="flex-1 flex flex-col h-full bg-background">
       {/* Table Toolbar */}
       <section className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-surface-container-high bg-background shrink-0">
         <div className="flex items-center gap-3">

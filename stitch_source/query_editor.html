@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Query Editor | Aegis Studio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .editor-bg { background-color: #0a0a0a; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #131313; }
+        ::-webkit-scrollbar-thumb { background: #353534; border-radius: 10px; }
+        .glass-panel { backdrop-filter: blur(12px); background-color: rgba(53, 53, 52, 0.6); }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "surface-variant": "#353534",
+                "on-tertiary-fixed-variant": "#005142",
+                "surface-bright": "#3a3939",
+                "secondary-fixed": "#e5e2e1",
+                "secondary": "#c8c6c5",
+                "primary": "#adc6ff",
+                "on-surface": "#e5e2e1",
+                "on-tertiary": "#00382d",
+                "on-error-container": "#ffdad6",
+                "surface-container-low": "#1c1b1b",
+                "on-primary-fixed": "#001a41",
+                "on-error": "#690005",
+                "surface-container-high": "#2a2a2a",
+                "on-secondary-fixed": "#1c1b1b",
+                "surface-container-lowest": "#0e0e0e",
+                "background": "#131313",
+                "surface-tint": "#adc6ff",
+                "on-secondary-container": "#bab8b7",
+                "error": "#ffb4ab",
+                "tertiary-fixed-dim": "#48ddbc",
+                "tertiary": "#48ddbc",
+                "on-primary-container": "#ffffff",
+                "secondary-container": "#4a4949",
+                "outline": "#8b90a0",
+                "surface": "#131313",
+                "tertiary-container": "#00866f",
+                "error-container": "#93000a",
+                "primary-fixed": "#d8e2ff",
+                "on-surface-variant": "#c1c6d7",
+                "outline-variant": "#414754",
+                "on-background": "#e5e2e1",
+                "on-primary": "#002e69",
+                "on-primary-fixed-variant": "#004493",
+                "on-secondary": "#313030",
+                "inverse-primary": "#005bc1",
+                "surface-container-highest": "#353534",
+                "on-tertiary-container": "#ffffff",
+                "primary-fixed-dim": "#adc6ff",
+                "tertiary-fixed": "#6bfad8",
+                "primary-container": "#0071ee",
+                "surface-dim": "#131313",
+                "inverse-surface": "#e5e2e1",
+                "on-tertiary-fixed": "#002019",
+                "surface-container": "#201f1f",
+                "on-secondary-fixed-variant": "#474646",
+                "inverse-on-surface": "#313030",
+                "secondary-fixed-dim": "#c8c6c5"
+              },
+              fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.125rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface overflow-hidden h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="flex justify-between items-center px-6 w-full sticky top-0 z-50 bg-[#131313] h-14 border-b border-[#2a2a2a] font-['Inter'] antialiased">
+<div class="flex items-center gap-8">
+<span class="text-lg font-bold tracking-tight text-[#e5e2e1]">Aegis Studio</span>
+<div class="hidden md:flex gap-4">
+<a class="text-[#c1c6d7] hover:bg-[#2a2a2a] transition-colors px-3 py-1 rounded-lg" href="#">Workspaces</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative flex items-center bg-surface-container-low px-3 py-1 rounded-lg border border-outline-variant/30">
+<span class="material-symbols-outlined text-sm text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs w-48 text-on-surface" placeholder="Search tables or metadata..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-[#c1c6d7] hover:bg-[#2a2a2a] transition-colors p-2 rounded-lg">notifications</button>
+<button class="material-symbols-outlined text-[#c1c6d7] hover:bg-[#2a2a2a] transition-colors p-2 rounded-lg">help_outline</button>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="close-up portrait of a professional male developer with a neutral expression and soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzCRU9zwQXG3y3jNCTYqpGw7ES9GsD8QJj1K2gJIZYkLIsegBR3aYE0j64Y7kw9OmFDhsl39CBOu4f9fXbrusMZTB8qnuBZtiE6p76-6_VXPDepRtuPocdDJ_4VrdYuJGOLGG1pA-b9T_QIrqZu-xtQMVTzlzuSVdvtTanA3Mjs94VFizN3IKfKO3-vKvEzjWdXoLE_-Z3_R3XA8MFY5xRZS1nYbcetaAtPN_SJfZY8Bb6e4R50E-Od4qAK6JOrnpfwhvBe0Gekw"/>
+</div>
+</nav>
+<div class="flex flex-1 overflow-hidden">
+<!-- Left SideNavBar (Schema Explorer) -->
+<aside class="h-screen w-64 border-r border-[#2a2a2a] bg-[#0e0e0e] flex flex-col py-4 space-y-2 font-['Inter'] text-sm font-medium tracking-wide">
+<div class="px-4 mb-4">
+<button class="w-full bg-primary-container text-on-primary-container py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined text-sm">add</span>
+                    New Query
+                </button>
+</div>
+<div class="flex-1 overflow-y-auto px-2">
+<div class="flex items-center gap-2 px-2 py-2 text-[#adc6ff] bg-[#131313] border-r-2 border-[#0071ee]">
+<span class="material-symbols-outlined text-sm">code</span>
+<span>Query Editor</span>
+</div>
+<div class="mt-6">
+<div class="flex items-center justify-between px-3 mb-2">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Database Schema</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant cursor-pointer">refresh</span>
+</div>
+<!-- Schema Tree -->
+<div class="space-y-1">
+<!-- Table Item -->
+<div class="group">
+<div class="flex items-center gap-2 px-3 py-1.5 hover:bg-[#201f1f] rounded transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm text-on-surface-variant group-hover:text-primary">expand_more</span>
+<span class="material-symbols-outlined text-sm text-tertiary">table_chart</span>
+<span class="text-on-surface-variant group-hover:text-on-surface">users_analytics</span>
+</div>
+<div class="pl-10 space-y-1 py-1">
+<div class="flex items-center justify-between text-xs text-on-surface-variant/70 hover:text-on-surface py-1 pr-2">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">key</span> id</span>
+<span class="text-[9px] font-mono opacity-50">UUID</span>
+</div>
+<div class="flex items-center justify-between text-xs text-on-surface-variant/70 hover:text-on-surface py-1 pr-2">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">short_text</span> email</span>
+<span class="text-[9px] font-mono opacity-50">VARCHAR</span>
+</div>
+<div class="flex items-center justify-between text-xs text-on-surface-variant/70 hover:text-on-surface py-1 pr-2 bg-primary/10 text-primary border-r-2 border-primary">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[14px]">event</span> last_login</span>
+<span class="text-[9px] font-mono opacity-50">TIMESTAMP</span>
+</div>
+</div>
+</div>
+<!-- Table Item 2 -->
+<div class="group">
+<div class="flex items-center gap-2 px-3 py-1.5 hover:bg-[#201f1f] rounded transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">chevron_right</span>
+<span class="material-symbols-outlined text-sm text-tertiary">table_chart</span>
+<span class="text-on-surface-variant group-hover:text-on-surface">transaction_logs</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-[#2a2a2a]">
+<div class="flex items-center gap-3 px-4 py-2 text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] cursor-pointer transition-all">
+<span class="material-symbols-outlined text-sm">menu_book</span>
+<span>Docs</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-2 text-[#c1c6d7] opacity-70 hover:bg-[#201f1f] hover:text-[#e5e2e1] cursor-pointer transition-all">
+<span class="material-symbols-outlined text-sm">settings</span>
+<span>Settings</span>
+</div>
+</div>
+</aside>
+<!-- Main Query Workspace -->
+<main class="flex-1 flex flex-col bg-surface overflow-hidden">
+<!-- Editor Tabs -->
+<div class="flex items-center bg-surface-container-lowest h-10 border-b border-surface-container-high px-2">
+<div class="flex items-center gap-2 px-4 py-2 bg-surface text-primary border-t-2 border-primary text-xs font-medium cursor-pointer">
+<span class="material-symbols-outlined text-xs">database</span>
+                    user_retention.sql
+                    <span class="material-symbols-outlined text-[10px] ml-2 opacity-50 hover:opacity-100">close</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 text-on-surface-variant hover:bg-surface-container h-full text-xs font-medium cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-xs">database</span>
+                    revenue_growth.sql
+                    <span class="material-symbols-outlined text-[10px] ml-2 opacity-50 hover:opacity-100">close</span>
+</div>
+<button class="p-1 ml-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<!-- SQL Editor Area -->
+<div class="flex-1 flex flex-col overflow-hidden">
+<div class="flex-1 editor-bg relative font-mono text-[13px] leading-relaxed overflow-hidden group">
+<!-- Line Numbers & Code -->
+<div class="flex h-full overflow-y-auto">
+<div class="w-12 bg-surface-container-lowest text-on-surface-variant/30 text-right pr-3 pt-4 select-none border-r border-surface-container-high/50">
+                            1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/>10<br/>11
+                        </div>
+<div class="flex-1 p-4 text-secondary whitespace-pre">
+<span class="text-primary">SELECT</span>
+  u.id,
+  u.email,
+  <span class="text-tertiary">COUNT</span>(t.id) <span class="text-primary">AS</span> transaction_count,
+  <span class="text-tertiary">SUM</span>(t.amount) <span class="text-primary">AS</span> total_spent
+<span class="text-primary">FROM</span> users_analytics u
+<span class="text-primary">LEFT JOIN</span> transaction_logs t <span class="text-primary">ON</span> u.id = t.user_id
+<span class="text-primary">WHERE</span> u.last_login &gt; <span class="text-tertiary-fixed-dim">'2023-01-01'</span>
+<span class="text-primary">GROUP BY</span> 1, 2
+<span class="text-primary">ORDER BY</span> 4 <span class="text-primary">DESC</span>
+<span class="text-primary">LIMIT</span> <span class="text-tertiary">100</span>;
+                        </div>
+</div>
+<!-- Editor Actions Floating -->
+<div class="absolute bottom-6 right-6 flex items-center gap-3">
+<button class="px-6 py-2 bg-tertiary text-on-tertiary font-bold rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">play_arrow</span>
+                            Run Query
+                        </button>
+</div>
+</div>
+<!-- Results Panel (Resizable-ish) -->
+<div class="h-1/3 bg-surface border-t border-surface-container-high flex flex-col">
+<div class="flex items-center justify-between px-4 py-2 border-b border-surface-container-high bg-surface-container-low">
+<div class="flex gap-4 items-center">
+<div class="flex bg-surface-container p-0.5 rounded-lg">
+<button class="px-3 py-1 bg-surface-container-highest text-xs font-semibold rounded text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">list</span> Results
+                                </button>
+<button class="px-3 py-1 text-on-surface-variant hover:text-on-surface text-xs font-semibold rounded flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-xs">bar_chart</span> Chart
+                                </button>
+</div>
+<span class="text-[11px] text-on-surface-variant/60 font-mono">100 rows returned in 24ms</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-sm text-on-surface-variant hover:text-primary transition-colors">download</button>
+<button class="material-symbols-outlined text-sm text-on-surface-variant hover:text-primary transition-colors">open_in_new</button>
+</div>
+</div>
+<div class="flex-1 overflow-auto">
+<table class="w-full text-left text-xs border-collapse">
+<thead class="sticky top-0 bg-surface-container-low z-10">
+<tr>
+<th class="px-4 py-2 border-b border-surface-container-high text-on-surface-variant font-semibold uppercase tracking-wider">id</th>
+<th class="px-4 py-2 border-b border-surface-container-high text-on-surface-variant font-semibold uppercase tracking-wider">email</th>
+<th class="px-4 py-2 border-b border-surface-container-high text-on-surface-variant font-semibold uppercase tracking-wider">transaction_count</th>
+<th class="px-4 py-2 border-b border-surface-container-high text-on-surface-variant font-semibold uppercase tracking-wider">total_spent</th>
+</tr>
+</thead>
+<tbody class="text-on-surface-variant font-mono">
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-4 py-2 border-b border-surface-container-high/30">d42-f912-4aa</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30">alex.j@aegis.ai</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30">42</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30 text-tertiary">$12,450.00</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-4 py-2 border-b border-surface-container-high/30">e12-b231-1ff</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30">sarah_dev@stack.com</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30">38</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30 text-tertiary">$9,820.50</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-4 py-2 border-b border-surface-container-high/30">a99-c884-3bb</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30">ops_manager@cloud.net</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30">29</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30 text-tertiary">$8,100.00</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="px-4 py-2 border-b border-surface-container-high/30">c01-d442-9ee</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30">data_sci_12@neural.io</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30">15</td>
+<td class="px-4 py-2 border-b border-surface-container-high/30 text-tertiary">$4,300.20</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<!-- Right SideNavBar (AI Assistant) -->
+<aside class="fixed right-0 top-14 h-[calc(100vh-3.5rem)] w-80 bg-[#131313] border-l border-[#2a2a2a] flex flex-col font-['Inter'] shadow-[0_0_40px_rgba(0,0,0,0.4)]">
+<div class="p-6 flex flex-col h-full">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-[#48ddbc]" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<div>
+<h2 class="text-md font-bold text-[#48ddbc] tracking-tight">Aegis Assistant</h2>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest opacity-60">Contextual AI</p>
+</div>
+</div>
+<div class="flex-1 space-y-4 overflow-y-auto">
+<!-- AI Chat Bubbles -->
+<div class="bg-surface-container-highest/30 p-3 rounded-xl border border-surface-container-high text-xs leading-relaxed">
+<p class="text-on-surface-variant">I've analyzed your query. You're joining <span class="text-tertiary">users_analytics</span> with <span class="text-tertiary">transaction_logs</span>. Would you like me to optimize the join for better performance?</p>
+<div class="mt-3 flex flex-wrap gap-2">
+<button class="bg-[#131313] border border-tertiary/30 text-tertiary px-2 py-1 rounded text-[10px] hover:bg-tertiary/10 transition-colors">Optimize Join</button>
+<button class="bg-[#131313] border border-primary/30 text-primary px-2 py-1 rounded text-[10px] hover:bg-primary/10 transition-colors">Add Index Hint</button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button class="w-full flex items-center justify-between p-3 bg-surface-container hover:bg-surface-container-highest rounded-lg transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-sm">auto_fix_high</span>
+<span class="text-xs font-semibold">Explain query</span>
+</div>
+<span class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-3 bg-surface-container hover:bg-surface-container-highest rounded-lg transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary text-sm">speed</span>
+<span class="text-xs font-semibold">Optimize query</span>
+</div>
+<span class="material-symbols-outlined text-xs opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+</div>
+<!-- Visual Insight Preview -->
+<div class="mt-4 p-4 rounded-xl bg-gradient-to-br from-surface-container-low to-surface-container-highest border border-outline-variant/20">
+<h4 class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-3">Predicted Trend</h4>
+<div class="h-24 w-full flex items-end gap-1">
+<div class="w-full bg-tertiary/20 h-[30%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/40 h-[45%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/60 h-[65%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/40 h-[40%] rounded-t-sm"></div>
+<div class="w-full bg-tertiary/80 h-[85%] rounded-t-sm animate-pulse"></div>
+</div>
+<p class="text-[10px] mt-2 text-on-surface-variant leading-tight">Revenue expected to increase by 12% based on current user cohort data.</p>
+</div>
+</div>
+<div class="mt-6">
+<div class="relative">
+<textarea class="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl p-3 pr-10 text-xs text-on-surface focus:border-primary/50 focus:ring-0 resize-none h-24 placeholder:text-on-surface-variant/40" placeholder="Ask AI to generate a query..."></textarea>
+<button class="absolute bottom-3 right-3 text-primary hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Floating Tooltip / Insight -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 glass-panel border border-outline-variant/20 px-4 py-2 rounded-full flex items-center gap-3 shadow-2xl z-50">
+<span class="flex h-2 w-2 rounded-full bg-tertiary animate-ping"></span>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface">Live Streaming Connected: 2,492 events/sec</span>
+</div>
+</body></html>

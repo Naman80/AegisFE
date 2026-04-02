@@ -38,7 +38,7 @@ const MOCK_PIPELINES: PipelineStatus[] = [
 
 export default function Dashboard() {
   return (
-    <div className="p-10 space-y-10 pr-80">
+    <div className="p-10 space-y-10">
       {/* Hero / Quick Stats Section */}
       <section>
         <div className="flex justify-between items-end mb-6">

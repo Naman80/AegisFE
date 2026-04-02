@@ -32,3 +32,32 @@ export interface SystemMetric {
   label: string;
   value: string;
 }
+
+export interface SchemaColumn {
+  name: string;
+  type: string;
+  keyType?: 'PK' | 'FK' | 'UN';
+}
+
+export interface SchemaTable {
+  name: string;
+  description?: string;
+  columns: SchemaColumn[];
+}
+
+export interface ChatMessage {
+  role: 'assistant' | 'user';
+  content: string;
+  actions?: string[];
+}
+
+export interface QueryResultColumn {
+  field: string;
+}
+
+export interface QueryResult {
+  columns: QueryResultColumn[];
+  rows: Record<string, any>[];
+  timeMs?: number;
+  rowCount?: number;
+}
