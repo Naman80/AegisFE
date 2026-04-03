@@ -78,3 +78,14 @@ export interface PipelineEdge {
   animated?: boolean;
   style?: React.CSSProperties;
 }
+
+export interface QueryTab {
+  id: string;
+  name: string;
+  content: string;
+  isDirty: boolean;
+  executionState: 'idle' | 'running' | 'success' | 'error';
+  result?: QueryResult;
+  errorMessage?: string;
+  lastExecutedAt?: string;
+}
