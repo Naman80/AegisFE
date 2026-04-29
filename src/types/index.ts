@@ -1,4 +1,13 @@
 export type Status = 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'RUNNING' | 'PAUSED';
+export type DatabaseType = 'POSTGRES';
+export type ConnectionEntryMode = 'manual' | 'url';
+export type SslMode =
+  | 'disable'
+  | 'allow'
+  | 'prefer'
+  | 'require'
+  | 'verify_ca'
+  | 'verify_full';
 
 export interface Query {
   id: string;
@@ -60,6 +69,96 @@ export interface QueryResult {
   rows: Record<string, any>[];
   timeMs?: number;
   rowCount?: number;
+}
+
+export interface DatabaseConnection {
+  id: string;
+  name: string;
+  type: DatabaseType;
+  connectionUrl?: string | null;
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  sslMode: SslMode;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ManualConnectionPayload {
+  name: string;
+  type: DatabaseType;
+  mode: 'manual';
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
+  sslMode: SslMode;
+}
+
+export interface UrlConnectionPayload {
+  name: string;
+  type: DatabaseType;
+  mode: 'url';
+  connectionUrl: string;
+}
+
+export type ConnectionPayload = ManualConnectionPayload | UrlConnectionPayload;
+
+export interface ParsedConnectionPreview {
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  sslMode: SslMode;
+}
+
+export interface ConnectionTestResult {
+  success: boolean;
+  message: string;
+}
+
+export interface DatabaseSchema {
+  name: string;
+}
+
+export interface DatabaseTableSummary {
+  schema: string;
+  name: string;
+  type: string;
+}
+
+export interface DatabaseTableColumn {
+  name: string;
+  dataType: string;
+  isNullable: boolean;
+  defaultValue: string | null;
+  keyType?: 'PK' | 'FK' | 'UN';
+}
+
+export interface DatabaseTableRelation {
+  constraintName: string;
+  columnName: string;
+  referencedSchema: string;
+  referencedTable: string;
+  referencedColumn: string;
+}
+
+export interface DatabaseTableDetails {
+  schema: string;
+  name: string;
+  columns: DatabaseTableColumn[];
+  relations: DatabaseTableRelation[];
+}
+
+export interface RowPreviewResult {
+  columns: string[];
+  rows: Record<string, unknown>[];
+  totalCount: number;
+  limit: number;
+  offset: number;
 }
 
 // React Flow Compatible Types for Pipelines
