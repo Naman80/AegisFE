@@ -8,7 +8,7 @@ import type { DatabaseSchema, DatabaseTableDetails, DatabaseTableSummary } from 
 export default function SchemaBuilder() {
   const [schemas, setSchemas] = useState<DatabaseSchema[]>([]);
   const [tables, setTables] = useState<DatabaseTableSummary[]>([]);
-  const [selectedSchema, setSelectedSchema] = useState("public");
+  const [selectedSchema, setSelectedSchema] = useState("");
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [details, setDetails] = useState<DatabaseTableDetails | null>(null);
   const [isLoadingSchemas, setIsLoadingSchemas] = useState(true);
@@ -31,12 +31,12 @@ export default function SchemaBuilder() {
   }, [selectedSchema]);
 
   useEffect(() => {
-    if (!selectedTable) {
+    if (!selectedTable || !selectedSchema) {
       return;
     }
 
     void loadDetails(selectedSchema, selectedTable);
-  }, [selectedSchema, selectedTable]);
+  }, [selectedTable]);
 
   async function loadSchemas() {
     setIsLoadingSchemas(true);

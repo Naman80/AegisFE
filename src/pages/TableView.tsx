@@ -8,7 +8,7 @@ import type { DatabaseSchema, DatabaseTableSummary, RowPreviewResult } from "@/t
 export default function TableView() {
   const [schemas, setSchemas] = useState<DatabaseSchema[]>([]);
   const [tables, setTables] = useState<DatabaseTableSummary[]>([]);
-  const [selectedSchema, setSelectedSchema] = useState("public");
+  const [selectedSchema, setSelectedSchema] = useState("");
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [rowsResult, setRowsResult] = useState<RowPreviewResult | null>(null);
   const [isLoadingSchemas, setIsLoadingSchemas] = useState(true);
@@ -34,12 +34,12 @@ export default function TableView() {
   }, [selectedSchema]);
 
   useEffect(() => {
-    if (!selectedTable) {
+    if (!selectedTable || !selectedSchema) {
       return;
     }
 
     void loadRows(selectedSchema, selectedTable, 25, 0);
-  }, [selectedSchema, selectedTable]);
+  }, [selectedTable]);
 
   async function loadSchemas() {
     setIsLoadingSchemas(true);
