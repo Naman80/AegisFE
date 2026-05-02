@@ -1,3 +1,5 @@
+import { DatasourceSelector } from "../features/Datasource/DatasourceSelector";
+
 export default function TopNavBar() {
   return (
     <header className="w-full h-14 shrink-0 border-b border-surface-container-high bg-background flex justify-between items-center px-6 sticky top-0 z-50 font-body antialiased">
@@ -6,7 +8,7 @@ export default function TopNavBar() {
           <span className="material-symbols-outlined text-base">folder</span>
           <span className="font-medium text-primary">Workspaces</span>
           <span className="text-outline">/</span>
-          <span className="text-on-surface">Production_DB</span>
+          <DatasourceSelector />
         </div>
       </div>
       <div className="flex items-center gap-6">

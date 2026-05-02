@@ -1,92 +1,91 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import TopNavBar from "@/components/layout/TopNavBar";
-import { getTableDetails, listSchemas, listTables } from "@/lib/database-api";
-import type { DatabaseSchema, DatabaseTableDetails, DatabaseTableSummary } from "@/types";
+import { useDatasource } from "@/contexts/DatasourceContext";
+import { listNamespaces, listEntities } from "@/services/explorer.service";
+import { getEntitySchema } from "@/services/schema.service";
+import type { Namespace, Entity, Field } from "@/types/normalization";
 
 export default function SchemaBuilder() {
-  const [schemas, setSchemas] = useState<DatabaseSchema[]>([]);
-  const [tables, setTables] = useState<DatabaseTableSummary[]>([]);
-  const [selectedSchema, setSelectedSchema] = useState("");
-  const [selectedTable, setSelectedTable] = useState<string | null>(null);
-  const [details, setDetails] = useState<DatabaseTableDetails | null>(null);
-  const [isLoadingSchemas, setIsLoadingSchemas] = useState(true);
-  const [isLoadingTables, setIsLoadingTables] = useState(false);
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const { activeDatasourceId } = useDatasource();
+  const [namespaces, setNamespaces] = useState<Namespace[]>([]);
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [selectedNamespace, setSelectedNamespace] = useState("");
+  const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+  const [fields, setFields] = useState<Field[]>([]);
+  
+  const [isLoadingNamespaces, setIsLoadingNamespaces] = useState(false);
+  const [isLoadingEntities, setIsLoadingEntities] = useState(false);
+  const [isLoadingFields, setIsLoadingFields] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const relationCount = useMemo(() => details?.relations.length ?? 0, [details]);
+  useEffect(() => {
+    if (activeDatasourceId) {
+      void loadNamespaces(activeDatasourceId);
+    }
+  }, [activeDatasourceId]);
 
   useEffect(() => {
-    void loadSchemas();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedSchema) {
+    if (!selectedNamespace || !activeDatasourceId) {
       return;
     }
-
-    void loadTables(selectedSchema);
-  }, [selectedSchema]);
+    void loadEntities(activeDatasourceId, selectedNamespace);
+  }, [selectedNamespace, activeDatasourceId]);
 
   useEffect(() => {
-    if (!selectedTable || !selectedSchema) {
+    if (!selectedEntity || !selectedNamespace || !activeDatasourceId) {
       return;
     }
+    void loadFields(activeDatasourceId, selectedNamespace, selectedEntity);
+  }, [selectedEntity, selectedNamespace, activeDatasourceId]);
 
-    void loadDetails(selectedSchema, selectedTable);
-  }, [selectedTable]);
-
-  async function loadSchemas() {
-    setIsLoadingSchemas(true);
+  async function loadNamespaces(dsId: string) {
+    setIsLoadingNamespaces(true);
     setError(null);
-
     try {
-      const nextSchemas = await listSchemas();
-      setSchemas(nextSchemas);
-
-      if (nextSchemas.length > 0) {
-        setSelectedSchema(nextSchemas[0].name);
+      const data = await listNamespaces(dsId);
+      setNamespaces(data);
+      if (data.length > 0) {
+        setSelectedNamespace(data[0].name);
       }
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load schemas.");
+    } catch (err: any) {
+      setError(err.message || "Failed to load namespaces");
     } finally {
-      setIsLoadingSchemas(false);
+      setIsLoadingNamespaces(false);
     }
   }
 
-  async function loadTables(schema: string) {
-    setIsLoadingTables(true);
+  async function loadEntities(dsId: string, ns: string) {
+    setIsLoadingEntities(true);
     setError(null);
-
     try {
-      const nextTables = await listTables(schema);
-      setTables(nextTables);
-      setSelectedTable(nextTables[0]?.name ?? null);
-      setDetails(null);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load tables.");
+      const data = await listEntities(dsId, ns);
+      setEntities(data);
+      setSelectedEntity(data[0]?.name ?? null);
+      setFields([]);
+    } catch (err: any) {
+      setError(err.message || "Failed to load entities");
     } finally {
-      setIsLoadingTables(false);
+      setIsLoadingEntities(false);
     }
   }
 
-  async function loadDetails(schema: string, table: string) {
-    setIsLoadingDetails(true);
+  async function loadFields(dsId: string, ns: string, entity: string) {
+    setIsLoadingFields(true);
     setError(null);
-
     try {
-      setDetails(await getTableDetails(schema, table));
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load table details.");
+      const data = await getEntitySchema(dsId, ns, entity);
+      setFields(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to load fields");
     } finally {
-      setIsLoadingDetails(false);
+      setIsLoadingFields(false);
     }
   }
 
   return (
-    <div className="flex flex-col w-full h-full relative">
+    <div className="flex flex-col w-full h-full relative bg-background">
       <TopNavBar />
 
       {error && (
@@ -99,40 +98,40 @@ export default function SchemaBuilder() {
         <aside className="bg-surface-container-lowest flex flex-col border-r border-surface-container-high">
           <div className="p-4 border-b border-surface-container-high">
             <div className="text-[10px] font-bold uppercase tracking-widest text-outline mb-2">
-              Schema
+              Namespace
             </div>
             <select
               className="w-full rounded-lg bg-surface-container px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-              value={selectedSchema}
-              onChange={(event) => setSelectedSchema(event.target.value)}
-              disabled={isLoadingSchemas}
+              value={selectedNamespace}
+              onChange={(e) => setSelectedNamespace(e.target.value)}
+              disabled={isLoadingNamespaces}
             >
-              {schemas.map((schema) => (
-                <option key={schema.name} value={schema.name}>
-                  {schema.name}
+              {namespaces.map((ns) => (
+                <option key={ns.name} value={ns.name}>
+                  {ns.name}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 py-3 space-y-1">
-            {isLoadingTables ? (
-              <div className="px-3 py-2 text-sm text-on-surface-variant">Loading tables...</div>
-            ) : tables.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-on-surface-variant">No tables found.</div>
+            {isLoadingEntities ? (
+              <div className="px-3 py-2 text-sm text-on-surface-variant animate-pulse">Loading entities...</div>
+            ) : entities.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-on-surface-variant italic">No entities found.</div>
             ) : (
-              tables.map((table) => (
+              entities.map((entity) => (
                 <button
-                  key={`${table.schema}.${table.name}`}
-                  className={`w-full rounded-sm px-3 py-2.5 text-left transition-all ${
-                    selectedTable === table.name
-                      ? "bg-surface border-r-2 border-primary text-primary"
-                      : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                  key={`${entity.namespace}.${entity.name}`}
+                  className={`w-full rounded-lg px-4 py-2.5 text-left transition-all ${
+                    selectedEntity === entity.name
+                      ? "bg-primary/5 text-primary font-semibold"
+                      : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
                   }`}
-                  onClick={() => setSelectedTable(table.name)}
+                  onClick={() => setSelectedEntity(entity.name)}
                 >
-                  <div className="font-medium">{table.name}</div>
-                  <div className="mt-1 text-[10px] uppercase tracking-wider opacity-70">{table.type}</div>
+                  <div className="text-sm">{entity.name}</div>
+                  <div className="mt-0.5 text-[9px] uppercase tracking-widest opacity-60 font-bold">{entity.type}</div>
                 </button>
               ))
             )}
@@ -141,62 +140,72 @@ export default function SchemaBuilder() {
 
         <main className="relative overflow-auto bg-surface-container-lowest">
           <div
-            className="absolute inset-0 opacity-40 pointer-events-none"
+            className="absolute inset-0 opacity-30 pointer-events-none"
             style={{
               backgroundImage: "radial-gradient(var(--surface-container-high) 1px, transparent 1px)",
-              backgroundSize: "28px 28px",
+              backgroundSize: "24px 24px",
             }}
           />
 
           <div className="relative z-10 p-10">
-            {!selectedTable ? (
-              <div className="rounded-xl border border-surface-container-high bg-surface p-8 text-sm text-on-surface-variant">
-                Pick a table to inspect its structure.
+            {!selectedEntity ? (
+              <div className="rounded-xl border border-surface-container-high bg-surface p-12 flex flex-col items-center justify-center text-on-surface-variant text-center gap-4 shadow-sm">
+                <span className="material-symbols-outlined text-5xl opacity-20">schema</span>
+                <p className="text-sm font-medium">Select an entity to inspect its architecture.</p>
               </div>
-            ) : isLoadingDetails || !details ? (
-              <div className="rounded-xl border border-surface-container-high bg-surface p-8 text-sm text-on-surface-variant">
-                Loading table metadata...
+            ) : isLoadingFields ? (
+              <div className="rounded-xl border border-surface-container-high bg-surface p-12 text-center animate-pulse shadow-sm">
+                <p className="text-sm font-medium text-on-surface-variant">Introspecting metadata...</p>
               </div>
             ) : (
-              <div className="max-w-2xl rounded-xl border-t-2 border-t-primary bg-surface shadow-[0_8px_32px_rgba(0,0,0,0.35)] overflow-hidden">
-                <div className="bg-surface-container-high px-5 py-4 border-b border-surface-container/50">
+              <div className="max-w-3xl mx-auto rounded-2xl border-t-4 border-t-primary bg-surface shadow-[0_12px_40px_rgba(0,0,0,0.4)] overflow-hidden">
+                <div className="bg-surface-container-high/40 px-6 py-5 border-b border-surface-container-high">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-lg font-bold text-on-surface">{details.name}</div>
-                      <div className="mt-1 text-xs font-mono text-on-surface-variant">
-                        {details.schema}.{details.name}
+                      <div className="text-xl font-black text-on-surface tracking-tight">{selectedEntity}</div>
+                      <div className="mt-1 text-[11px] font-bold font-mono text-primary/70 uppercase tracking-widest">
+                        {selectedNamespace}.{selectedEntity}
                       </div>
                     </div>
-                    <Button variant="outline" size="chip" onClick={() => void loadDetails(selectedSchema, details.name)}>
+                    <Button variant="outline" size="chip" onClick={() => activeDatasourceId && loadFields(activeDatasourceId, selectedNamespace, selectedEntity)}>
                       Refresh
                     </Button>
                   </div>
                 </div>
 
-                <div>
-                  {details.columns.map((column) => (
+                <div className="divide-y divide-surface-container-high/50">
+                  {fields.map((field) => (
                     <div
-                      key={column.name}
-                      className="flex items-center justify-between px-5 py-3 border-b border-surface-container-high/50 hover:bg-surface-container transition-colors"
+                      key={field.name}
+                      className="flex items-center justify-between px-6 py-4 hover:bg-surface-container-lowest transition-colors group"
                     >
-                      <div className="flex items-center gap-3">
-                        {column.keyType ? (
-                          <Badge variant={column.keyType === "PK" ? "default" : "outline"} className="py-0.5 px-1 rounded-[4px] text-[9px]">
-                            {column.keyType}
-                          </Badge>
-                        ) : (
-                          <span className="w-8" />
-                        )}
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-surface-container group-hover:bg-primary/5 transition-colors">
+                          <span className={field.isPrimaryKey ? "material-symbols-outlined text-primary text-lg" : "material-symbols-outlined text-outline text-lg"}>
+                            {field.isPrimaryKey ? "key" : "view_column"}
+                          </span>
+                        </div>
                         <div>
-                          <div className="font-mono text-sm text-on-surface">{column.name}</div>
-                          <div className="text-[11px] text-outline">
-                            {column.isNullable ? "Nullable" : "Required"}
-                            {column.defaultValue ? ` • Default: ${column.defaultValue}` : ""}
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-on-surface">{field.name}</span>
+                            {field.isPrimaryKey && (
+                              <Badge variant="default" className="text-[9px] py-0 px-1.5 rounded-[4px] font-black tracking-widest uppercase">
+                                PK
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider opacity-60">
+                            {field.isNullable ? "Nullable" : "Required"}
+                            {field.defaultValue ? ` • DEFAULT: ${field.defaultValue}` : ""}
                           </div>
                         </div>
                       </div>
 
-                      <span className="font-mono text-xs text-on-surface-variant">{column.dataType}</span>
+                      <div className="flex flex-col items-end">
+                        <span className="font-mono text-[11px] font-black text-primary px-2 py-0.5 rounded-full bg-primary/10">
+                          {field.type}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -205,60 +214,43 @@ export default function SchemaBuilder() {
           </div>
         </main>
 
-        <aside className="bg-surface flex flex-col border-l border-surface-container-high shadow-[-10px_0_40px_rgba(0,0,0,0.2)]">
-          <div className="p-5 border-b border-surface-container-high">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-tertiary mb-4">
-              Properties
+        <aside className="bg-surface flex flex-col border-l border-surface-container-high shadow-[-15px_0_40px_rgba(0,0,0,0.15)] z-20">
+          <div className="p-6 border-b border-surface-container-high">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4">
+              Structural Properties
             </div>
-            <h2 className="text-on-surface font-bold">{selectedTable ?? "No selection"}</h2>
-            <p className="text-outline text-xs mt-1">
-              {details ? `${details.columns.length} columns • ${relationCount} relations` : "Waiting for table metadata"}
+            <h2 className="text-xl font-black text-on-surface tracking-tight">{selectedEntity ?? "No selection"}</h2>
+            <p className="text-on-surface-variant text-xs mt-1.5 font-medium leading-relaxed">
+              {fields.length ? `${fields.length} normalized fields identified.` : "Waiting for metadata introspection"}
             </p>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-6">
-            <section className="space-y-3">
-              <div className="text-[10px] font-bold text-outline uppercase tracking-widest">Columns</div>
-              <div className="space-y-2">
-                {details?.columns.map((column) => (
-                  <div
-                    key={column.name}
-                    className="rounded-xl border border-surface-container-high bg-surface-container p-3"
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-[13px] font-bold text-on-surface font-mono">{column.name}</span>
-                      <span className="text-[11px] text-outline-variant font-mono">{column.dataType}</span>
-                    </div>
-                    <span className="text-[9px] uppercase font-bold tracking-wider text-on-surface-variant">
-                      {column.keyType ?? (column.isNullable ? "Nullable" : "Required")}
-                    </span>
-                  </div>
-                )) ?? (
-                  <div className="text-sm text-on-surface-variant">No column data yet.</div>
-                )}
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <section className="space-y-4">
+              <div className="text-[10px] font-black text-outline uppercase tracking-[0.2em]">Summary</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-surface-container-low rounded-xl p-4 border border-surface-container-high shadow-sm">
+                  <div className="text-[10px] font-bold text-outline uppercase mb-1">Total Fields</div>
+                  <div className="text-2xl font-black text-on-surface">{fields.length}</div>
+                </div>
+                <div className="bg-surface-container-low rounded-xl p-4 border border-surface-container-high shadow-sm">
+                  <div className="text-[10px] font-bold text-outline uppercase mb-1">Keys</div>
+                  <div className="text-2xl font-black text-on-surface">{fields.filter(f => f.isPrimaryKey).length}</div>
+                </div>
               </div>
             </section>
 
-            <section className="space-y-3">
-              <div className="text-[10px] font-bold text-outline uppercase tracking-widest">Relations</div>
+            <section className="space-y-4">
+              <div className="text-[10px] font-black text-outline uppercase tracking-[0.2em]">Quick Actions</div>
               <div className="space-y-2">
-                {details?.relations.length ? (
-                  details.relations.map((relation) => (
-                    <div
-                      key={relation.constraintName}
-                      className="rounded-xl border border-surface-container-high bg-surface-container p-3"
-                    >
-                      <div className="text-xs font-semibold text-on-surface">
-                        {relation.columnName} → {relation.referencedTable}.{relation.referencedColumn}
-                      </div>
-                      <div className="mt-1 text-[11px] font-mono text-on-surface-variant">
-                        {relation.referencedSchema}.{relation.referencedTable}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-on-surface-variant">No foreign key relations found.</div>
-                )}
+                <Button variant="outline" className="w-full justify-start text-xs font-bold py-5 rounded-xl border-surface-container-high" disabled={!selectedEntity}>
+                   <span className="material-symbols-outlined text-sm mr-2">edit</span>
+                   Alter Entity
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-xs font-bold py-5 rounded-xl border-surface-container-high text-error hover:bg-error/5 hover:text-error hover:border-error/20" disabled={!selectedEntity}>
+                   <span className="material-symbols-outlined text-sm mr-2">delete</span>
+                   Drop Entity
+                </Button>
               </div>
             </section>
           </div>

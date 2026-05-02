@@ -1,3 +1,5 @@
+import type { QueryResult } from './normalization';
+
 export type Status = 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'RUNNING' | 'PAUSED';
 export type DatabaseType = 'POSTGRES';
 export type ConnectionEntryMode = 'manual' | 'url';
@@ -42,33 +44,10 @@ export interface SystemMetric {
   value: string;
 }
 
-export interface SchemaColumn {
-  name: string;
-  type: string;
-  keyType?: 'PK' | 'FK' | 'UN';
-}
-
-export interface SchemaTable {
-  name: string;
-  description?: string;
-  columns: SchemaColumn[];
-}
-
 export interface ChatMessage {
   role: 'assistant' | 'user';
   content: string;
   actions?: string[];
-}
-
-export interface QueryResultColumn {
-  field: string;
-}
-
-export interface QueryResult {
-  columns: QueryResultColumn[];
-  rows: Record<string, any>[];
-  timeMs?: number;
-  rowCount?: number;
 }
 
 export interface DatabaseConnection {
@@ -118,47 +97,6 @@ export interface ParsedConnectionPreview {
 export interface ConnectionTestResult {
   success: boolean;
   message: string;
-}
-
-export interface DatabaseSchema {
-  name: string;
-}
-
-export interface DatabaseTableSummary {
-  schema: string;
-  name: string;
-  type: string;
-}
-
-export interface DatabaseTableColumn {
-  name: string;
-  dataType: string;
-  isNullable: boolean;
-  defaultValue: string | null;
-  keyType?: 'PK' | 'FK' | 'UN';
-}
-
-export interface DatabaseTableRelation {
-  constraintName: string;
-  columnName: string;
-  referencedSchema: string;
-  referencedTable: string;
-  referencedColumn: string;
-}
-
-export interface DatabaseTableDetails {
-  schema: string;
-  name: string;
-  columns: DatabaseTableColumn[];
-  relations: DatabaseTableRelation[];
-}
-
-export interface RowPreviewResult {
-  columns: string[];
-  rows: Record<string, unknown>[];
-  totalCount: number;
-  limit: number;
-  offset: number;
 }
 
 // React Flow Compatible Types for Pipelines

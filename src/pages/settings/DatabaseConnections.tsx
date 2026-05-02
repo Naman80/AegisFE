@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  activateConnection,
-  createConnection,
-  listConnections,
-  testConnection,
-} from "@/lib/database-api";
+  listDatasources,
+  createDatasource,
+  activateDatasource,
+  testDatasourceConnection,
+  deleteDatasource
+} from "@/services/datasource.service";
+import { useDatasource } from "@/contexts/DatasourceContext";
+import { Loader2 } from "lucide-react";
 import type {
   ConnectionEntryMode,
   DatabaseConnection,
@@ -34,6 +37,7 @@ const initialUrlForm: UrlConnectionPayload = {
 };
 
 export default function DatabaseConnections() {
+  const { refreshDatasources } = useDatasource();
   const [mode, setMode] = useState<ConnectionEntryMode>("url");
   const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [manualForm, setManualForm] = useState<ManualConnectionPayload>(initialManualForm);
@@ -43,11 +47,6 @@ export default function DatabaseConnections() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const activeConnection = useMemo(
-    () => connections.find((connection) => connection.isActive) ?? null,
-    [connections],
-  );
 
   const parsedPreview = useMemo(
     () => parseConnectionPreview(urlForm.connectionUrl),
@@ -61,15 +60,11 @@ export default function DatabaseConnections() {
   async function loadConnections() {
     setIsLoading(true);
     setError(null);
-
     try {
-      setConnections(await listConnections());
-    } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : "Failed to load connections.",
-      );
+      const data = await listDatasources();
+      setConnections(data);
+    } catch (loadError: any) {
+      setError(loadError.message || "Failed to load connections.");
     } finally {
       setIsLoading(false);
     }
@@ -79,20 +74,15 @@ export default function DatabaseConnections() {
     return mode === "url" ? urlForm : manualForm;
   }
 
-  async function handleTestConnection() {
+  async function handleTestConnection(id: string) {
     setIsTesting(true);
     setMessage(null);
     setError(null);
-
     try {
-      const result = await testConnection(getActivePayload());
+      const result = await testDatasourceConnection(id);
       setMessage(result.message);
-    } catch (testError) {
-      setError(
-        testError instanceof Error
-          ? testError.message
-          : "Connection test failed.",
-      );
+    } catch (testError: any) {
+      setError(testError.message || "Connection test failed.");
     } finally {
       setIsTesting(false);
     }
@@ -102,19 +92,15 @@ export default function DatabaseConnections() {
     setIsSaving(true);
     setMessage(null);
     setError(null);
-
     try {
-      await createConnection(getActivePayload());
+      await createDatasource(getActivePayload());
       setManualForm(initialManualForm);
       setUrlForm(initialUrlForm);
-      setMessage("Connection saved.");
+      setMessage("Connection saved successfully.");
       await loadConnections();
-    } catch (saveError) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : "Failed to save connection.",
-      );
+      await refreshDatasources(); // Sync global state
+    } catch (saveError: any) {
+      setError(saveError.message || "Failed to save connection.");
     } finally {
       setIsSaving(false);
     }
@@ -123,108 +109,138 @@ export default function DatabaseConnections() {
   async function handleActivateConnection(id: string) {
     setError(null);
     setMessage(null);
-
     try {
-      await activateConnection(id);
-      setMessage("Active connection updated.");
+      await activateDatasource(id);
+      setMessage("Connection activated.");
       await loadConnections();
-    } catch (activateError) {
-      setError(
-        activateError instanceof Error
-          ? activateError.message
-          : "Failed to activate connection.",
-      );
+      await refreshDatasources(); // Sync global state
+    } catch (activateError: any) {
+      setError(activateError.message || "Failed to activate connection.");
+    }
+  }
+
+  async function handleDeleteConnection(id: string) {
+    if (!confirm("Are you sure you want to delete this connection?")) return;
+    try {
+      await deleteDatasource(id);
+      await loadConnections();
+      await refreshDatasources();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete connection");
     }
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-10 p-4">
       <header className="mb-2">
-        <h1 className="text-2xl font-bold text-on-surface mb-2">Database Connections</h1>
-        <p className="text-on-surface-variant">
-          Connect to PostgreSQL either with a single URL or the full manual form.
+        <h1 className="text-3xl font-black text-on-surface tracking-tight mb-2 uppercase">Database Fleet</h1>
+        <p className="text-on-surface-variant font-medium opacity-80">
+          Manage your database connections with normalized provider-agnostic architecture.
         </p>
       </header>
 
       {(message || error) && (
         <div
-          className={`rounded-xl border px-4 py-3 text-sm ${
-            error
-              ? "border-error/30 bg-error/10 text-error"
-              : "border-tertiary/30 bg-tertiary/10 text-tertiary"
-          }`}
+          className={`rounded-2xl border px-6 py-4 text-sm font-bold shadow-sm transition-all animate-in fade-in slide-in-from-top-4 ${error
+              ? "border-error/20 bg-error/5 text-error"
+              : "border-primary/20 bg-primary/5 text-primary"
+            }`}
         >
-          {error ?? message}
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-lg">{error ? 'error' : 'check_circle'}</span>
+            {error ?? message}
+          </div>
         </div>
       )}
 
-      <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="bg-surface-container-low rounded-xl p-6 border border-surface-container-high">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="font-bold text-on-surface">Saved Connections</h2>
-              <p className="text-xs text-on-surface-variant mt-1">
-                {activeConnection
-                  ? `Active connection: ${activeConnection.name}`
-                  : "No active connection selected yet."}
-              </p>
-            </div>
-            <span className="inline-flex items-center rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary">
-              Postgres only
+      <section className="grid gap-10 lg:grid-cols-[1fr_400px]">
+        {/* Left: Saved Connections */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em]">Active Fleet</h2>
+            <span className="text-[10px] font-bold text-outline uppercase bg-surface-container px-2 py-0.5 rounded">
+              {connections.length} TOTAL
             </span>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid gap-4">
             {isLoading ? (
-              <div className="text-sm text-on-surface-variant">Loading connections...</div>
+              <div className="p-12 text-center bg-surface-container-lowest rounded-2xl border border-surface-container-high border-dashed">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary opacity-20" />
+                <p className="mt-4 text-xs font-bold text-outline uppercase tracking-widest">Enlisting connections...</p>
+              </div>
             ) : connections.length === 0 ? (
-              <div className="text-sm text-on-surface-variant">
-                No connections saved yet. Add one from the form.
+              <div className="p-12 text-center bg-surface-container-lowest rounded-2xl border border-surface-container-high border-dashed">
+                <span className="material-symbols-outlined text-5xl text-outline opacity-20">cloud_off</span>
+                <p className="mt-4 text-sm font-medium text-on-surface-variant">No connections established yet.</p>
               </div>
             ) : (
               connections.map((connection) => (
                 <div
                   key={connection.id}
-                  className={`rounded-xl border p-4 transition-colors ${
-                    connection.isActive
-                      ? "border-primary/40 bg-surface"
-                      : "border-surface-container-high bg-surface-container"
-                  }`}
+                  className={`rounded-2xl border-2 p-6 transition-all shadow-sm ${connection.isActive
+                      ? "border-primary bg-primary/[0.02] shadow-primary/5"
+                      : "border-surface-container-high bg-surface-container-lowest hover:border-outline-variant/30"
+                    }`}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="font-semibold text-on-surface">{connection.name}</h3>
-                        {connection.isActive && (
-                          <span className="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-tertiary/10 text-tertiary">
-                            Active
-                          </span>
-                        )}
-                        {connection.connectionUrl && (
-                          <span className="inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary">
-                            Added via URL
-                          </span>
-                        )}
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="flex gap-4">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${connection.isActive ? 'bg-primary text-on-primary' : 'bg-surface-container text-outline'}`}>
+                        <span className="material-symbols-outlined text-2xl">database</span>
                       </div>
-                      <p className="mt-1 text-xs font-mono text-on-surface-variant">
-                        {connection.username}@{connection.host}:{connection.port}/{connection.database}
-                      </p>
-                      <p className="mt-2 text-[11px] uppercase tracking-wider text-outline">
-                        SSL: {connection.sslMode}
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <h3 className="text-lg font-black text-on-surface tracking-tight">{connection.name}</h3>
+                          {connection.isActive && (
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-widest bg-primary text-on-primary shadow-sm">
+                              ACTIVE
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-mono text-on-surface-variant/70 font-medium">
+                          <span className="material-symbols-outlined text-xs">link</span>
+                          {connection.username}@{connection.host}:{connection.port}/{connection.database}
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-surface-container rounded-lg text-outline-variant border border-surface-container-high">
+                            TYPE: {connection.type}
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-surface-container rounded-lg text-outline-variant border border-surface-container-high">
+                            SSL: {connection.sslMode}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <button
-                      className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
-                        connection.isActive
-                          ? "bg-surface-container-high text-on-surface-variant"
-                          : "bg-primary-container text-on-primary-container hover:brightness-110"
-                      }`}
-                      disabled={connection.isActive}
-                      onClick={() => void handleActivateConnection(connection.id)}
-                    >
-                      {connection.isActive ? "Active" : "Set Active"}
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        className={`rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${connection.isActive
+                            ? "bg-surface-container text-outline cursor-default"
+                            : "bg-primary text-on-primary shadow-lg shadow-primary/10 hover:scale-105 active:scale-95"
+                          }`}
+                        disabled={connection.isActive}
+                        onClick={() => void handleActivateConnection(connection.id)}
+                      >
+                        {connection.isActive ? "Selected" : "Activate"}
+                      </button>
+                      <div className="flex gap-1 justify-end">
+                        <button
+                          onClick={() => handleTestConnection(connection.id)}
+                          className={`p-2 transition-colors rounded-lg ${isTesting ? 'text-primary animate-pulse' : 'text-outline hover:text-primary hover:bg-primary/5'}`}
+                          title="Test Connection"
+                          disabled={isTesting}
+                        >
+                          <span className="material-symbols-outlined text-sm">{isTesting ? 'sync' : 'network_check'}</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteConnection(connection.id)}
+                          className="p-2 text-outline hover:text-error transition-colors rounded-lg hover:bg-error/5"
+                          title="Delete"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))
@@ -232,177 +248,170 @@ export default function DatabaseConnections() {
           </div>
         </div>
 
-        <div className="bg-surface-container-low rounded-xl p-6 border border-surface-container-high">
-          <div className="mb-6">
-            <h2 className="font-bold text-on-surface mb-1">Connect PostgreSQL</h2>
-            <p className="text-xs text-on-surface-variant">
-              Use the fastest onboarding path for you, while Aegis still stores normalized connection details under the hood.
-            </p>
-          </div>
+        {/* Right: New Connection Form */}
+        <aside className="space-y-6">
+          <div className="bg-surface-container-low rounded-3xl p-8 border border-surface-container-high shadow-xl shadow-surface-container/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <span className="material-symbols-outlined text-8xl">add_link</span>
+            </div>
 
-          <div className="mb-6 flex rounded-lg bg-surface-container p-1">
-            <button
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                mode === "url"
-                  ? "bg-surface text-primary"
-                  : "text-on-surface-variant hover:text-on-surface"
-              }`}
-              onClick={() => setMode("url")}
-            >
-              Connection URL
-            </button>
-            <button
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                mode === "manual"
-                  ? "bg-surface text-primary"
-                  : "text-on-surface-variant hover:text-on-surface"
-              }`}
-              onClick={() => setMode("manual")}
-            >
-              Manual
-            </button>
-          </div>
+            <div className="mb-8">
+              <h2 className="text-xl font-black text-on-surface tracking-tight mb-2">Deploy Connection</h2>
+              <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">
+                Aegis stores encrypted metadata for multiple providers.
+              </p>
+            </div>
 
-          {mode === "url" ? (
-            <div className="space-y-4">
-              <Field label="Connection Name">
-                <input
-                  className="w-full rounded-lg bg-surface-container border-none px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-                  value={urlForm.name}
-                  onChange={(event) => setUrlForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Production PostgreSQL"
-                />
-              </Field>
+            <div className="mb-8 flex rounded-2xl bg-surface-container-highest p-1.5 shadow-inner">
+              <button
+                className={`flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${mode === "url"
+                    ? "bg-surface text-primary shadow-md"
+                    : "text-on-surface-variant hover:text-on-surface"
+                  }`}
+                onClick={() => setMode("url")}
+              >
+                URL Path
+              </button>
+              <button
+                className={`flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${mode === "manual"
+                    ? "bg-surface text-primary shadow-md"
+                    : "text-on-surface-variant hover:text-on-surface"
+                  }`}
+                onClick={() => setMode("manual")}
+              >
+                Manual
+              </button>
+            </div>
 
-              <Field label="Connection URL">
-                <textarea
-                  className="min-h-28 w-full rounded-lg bg-surface-container border-none px-4 py-3 text-sm text-on-surface font-mono focus:ring-1 focus:ring-primary/30 resize-none"
-                  value={urlForm.connectionUrl}
-                  onChange={(event) =>
-                    setUrlForm((current) => ({ ...current, connectionUrl: event.target.value }))
-                  }
-                  placeholder="postgresql://username:password@host:5432/database?sslmode=require"
-                />
-              </Field>
+            {mode === "url" ? (
+              <div className="space-y-6">
+                <Field label="Alias">
+                  <input
+                    className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20 placeholder:opacity-30"
+                    value={urlForm.name}
+                    onChange={(event) => setUrlForm((current) => ({ ...current, name: event.target.value }))}
+                    placeholder="e.g. Primary Cluster"
+                  />
+                </Field>
 
-              <div className="rounded-xl border border-surface-container-high bg-surface-container p-4">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
-                  Parsed Preview
-                </div>
+                <Field label="URL Protocol">
+                  <textarea
+                    className="min-h-24 w-full rounded-xl bg-surface-container border-none px-4 py-4 text-xs font-bold text-on-surface font-mono focus:ring-2 focus:ring-primary/20 resize-none shadow-inner"
+                    value={urlForm.connectionUrl}
+                    onChange={(event) =>
+                      setUrlForm((current) => ({ ...current, connectionUrl: event.target.value }))
+                    }
+                    placeholder="postgresql://user:pass@host:port/db"
+                  />
+                </Field>
 
-                {parsedPreview ? (
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <PreviewItem label="Host" value={parsedPreview.host} />
-                    <PreviewItem label="Port" value={String(parsedPreview.port)} />
-                    <PreviewItem label="Database" value={parsedPreview.database} />
-                    <PreviewItem label="Username" value={parsedPreview.username} />
-                    <PreviewItem label="SSL" value={parsedPreview.sslMode} />
-                  </div>
-                ) : (
-                  <div className="text-sm text-on-surface-variant">
-                    Enter a valid PostgreSQL URL to preview parsed connection details.
+                {parsedPreview && (
+                  <div className="rounded-2xl bg-primary/5 p-4 border border-primary/10 animate-in zoom-in-95 duration-200">
+                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-3">Normalized Data</div>
+                    <div className="grid grid-cols-2 gap-4 text-[10px] font-bold font-mono">
+                      <PreviewItem label="Host" value={parsedPreview.host} />
+                      <PreviewItem label="Port" value={String(parsedPreview.port)} />
+                      <PreviewItem label="DB" value={parsedPreview.database} />
+                      <PreviewItem label="User" value={parsedPreview.username} />
+                    </div>
                   </div>
                 )}
               </div>
+            ) : (
+              <div className="space-y-5">
+                <Field label="Alias">
+                  <input
+                    className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                    value={manualForm.name}
+                    onChange={(event) => setManualForm((current) => ({ ...current, name: event.target.value }))}
+                    placeholder="Production DB"
+                  />
+                </Field>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <Field label="Host Structure">
+                    <div className="flex gap-2">
+                      <input
+                        className="flex-1 rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                        value={manualForm.host}
+                        onChange={(event) => setManualForm((current) => ({ ...current, host: event.target.value }))}
+                        placeholder="localhost"
+                      />
+                      <input
+                        className="w-24 rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                        type="number"
+                        value={manualForm.port}
+                        onChange={(event) =>
+                          setManualForm((current) => ({ ...current, port: Number(event.target.value) || 5432 }))
+                        }
+                      />
+                    </div>
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Database">
+                    <input
+                      className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                      value={manualForm.database}
+                      onChange={(event) => setManualForm((current) => ({ ...current, database: event.target.value }))}
+                      placeholder="postgres"
+                    />
+                  </Field>
+                  <Field label="SSL">
+                    <select
+                      className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-xs font-black uppercase text-on-surface focus:ring-2 focus:ring-primary/20"
+                      value={manualForm.sslMode}
+                      onChange={(event) =>
+                        setManualForm((current) => ({
+                          ...current,
+                          sslMode: event.target.value as SslMode,
+                        }))
+                      }
+                    >
+                      {["disable", "require", "verify-full"].map((ssl) => (
+                        <option key={ssl} value={ssl}>{ssl}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Username">
+                    <input
+                      className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                      value={manualForm.username}
+                      onChange={(event) => setManualForm((current) => ({ ...current, username: event.target.value }))}
+                    />
+                  </Field>
+                  <Field label="Password">
+                    <input
+                      className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                      type="password"
+                      value={manualForm.password}
+                      onChange={(event) => setManualForm((current) => ({ ...current, password: event.target.value }))}
+                    />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-10">
+              <button
+                className="w-full rounded-2xl bg-primary px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-on-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                disabled={isSaving}
+                onClick={() => void handleSaveConnection()}
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <span className="material-symbols-outlined text-lg">rocket_launch</span>
+                )}
+                {isSaving ? "SYNCING..." : "COMMIT CONNECTION"}
+              </button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <Field label="Connection Name">
-                <input
-                  className="w-full rounded-lg bg-surface-container border-none px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-                  value={manualForm.name}
-                  onChange={(event) => setManualForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Production PostgreSQL"
-                />
-              </Field>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Host">
-                  <input
-                    className="w-full rounded-lg bg-surface-container border-none px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-                    value={manualForm.host}
-                    onChange={(event) => setManualForm((current) => ({ ...current, host: event.target.value }))}
-                    placeholder="db.internal"
-                  />
-                </Field>
-                <Field label="Port">
-                  <input
-                    className="w-full rounded-lg bg-surface-container border-none px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-                    type="number"
-                    value={manualForm.port}
-                    onChange={(event) =>
-                      setManualForm((current) => ({ ...current, port: Number(event.target.value) || 5432 }))
-                    }
-                  />
-                </Field>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Database">
-                  <input
-                    className="w-full rounded-lg bg-surface-container border-none px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-                    value={manualForm.database}
-                    onChange={(event) => setManualForm((current) => ({ ...current, database: event.target.value }))}
-                    placeholder="analytics"
-                  />
-                </Field>
-                <Field label="SSL Mode">
-                  <select
-                    className="w-full rounded-lg bg-surface-container border-none px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-                    value={manualForm.sslMode}
-                    onChange={(event) =>
-                      setManualForm((current) => ({
-                        ...current,
-                        sslMode: event.target.value as SslMode,
-                      }))
-                    }
-                  >
-                    {["disable", "allow", "prefer", "require", "verify_ca", "verify_full"].map((sslMode) => (
-                      <option key={sslMode} value={sslMode}>
-                        {sslMode}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Username">
-                  <input
-                    className="w-full rounded-lg bg-surface-container border-none px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-                    value={manualForm.username}
-                    onChange={(event) => setManualForm((current) => ({ ...current, username: event.target.value }))}
-                  />
-                </Field>
-                <Field label="Password">
-                  <input
-                    className="w-full rounded-lg bg-surface-container border-none px-4 py-2.5 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
-                    type="password"
-                    value={manualForm.password}
-                    onChange={(event) => setManualForm((current) => ({ ...current, password: event.target.value }))}
-                  />
-                </Field>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 flex gap-3">
-            <button
-              className="px-4 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface transition-colors"
-              disabled={isTesting}
-              onClick={() => void handleTestConnection()}
-            >
-              {isTesting ? "Testing..." : "Test Connection"}
-            </button>
-            <button
-              className="rounded-lg bg-primary-container px-4 py-2 text-xs font-bold text-on-primary-container hover:brightness-110 transition-all disabled:opacity-50"
-              disabled={isSaving}
-              onClick={() => void handleSaveConnection()}
-            >
-              {isSaving ? "Saving..." : "Save Connection"}
-            </button>
           </div>
-        </div>
+        </aside>
       </section>
     </div>
   );
@@ -416,8 +425,8 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block space-y-1.5">
-      <span className="text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">
+    <label className="block space-y-2">
+      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-70 ml-1">
         {label}
       </span>
       {children}
@@ -427,32 +436,22 @@ function Field({
 
 function PreviewItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-surface px-3 py-2">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+    <div>
+      <div className="text-[8px] font-black uppercase tracking-widest text-outline mb-1">
         {label}
       </div>
-      <div className="mt-1 text-sm font-mono text-on-surface">{value}</div>
+      <div className="text-[11px] truncate text-on-surface opacity-90">{value}</div>
     </div>
   );
 }
 
 function parseConnectionPreview(connectionUrl: string): ParsedConnectionPreview | null {
-  if (!connectionUrl.trim()) {
-    return null;
-  }
-
+  if (!connectionUrl.trim()) return null;
   try {
     const url = new URL(connectionUrl);
-
-    if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
-      return null;
-    }
-
+    if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") return null;
     const database = url.pathname.replace(/^\/+/, "");
-    if (!url.hostname || !database || !url.username) {
-      return null;
-    }
-
+    if (!url.hostname || !database || !url.username) return null;
     return {
       host: url.hostname,
       port: url.port ? Number(url.port) : 5432,
@@ -460,9 +459,7 @@ function parseConnectionPreview(connectionUrl: string): ParsedConnectionPreview 
       username: decodeURIComponent(url.username),
       sslMode: parseSslMode(url.searchParams.get("sslmode")),
     };
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function parseSslMode(value: string | null): SslMode {
