@@ -1,6 +1,12 @@
 import { request } from '../lib/api';
 import type { QueryResult } from '../types/normalization';
 
+const ENDPOINTS = {
+  EXECUTE: (datasourceId: string) => `/datasources/${datasourceId}/query`,
+  PREVIEW: (datasourceId: string, namespace: string, entity: string) => 
+    `/datasources/${datasourceId}/namespaces/${namespace}/entities/${entity}/preview`,
+};
+
 export const executeQuery = (datasourceId: string, input: {
   namespace: string;
   entity?: string;
@@ -8,7 +14,7 @@ export const executeQuery = (datasourceId: string, input: {
   limit?: number;
   offset?: number;
 }) => {
-  return request<QueryResult>(`/datasources/${datasourceId}/query`, {
+  return request<QueryResult>(ENDPOINTS.EXECUTE(datasourceId), {
     method: 'POST',
     body: JSON.stringify(input),
   });
@@ -26,6 +32,6 @@ export const previewEntity = (
     offset: offset.toString(),
   });
   return request<QueryResult>(
-    `/datasources/${datasourceId}/namespaces/${namespace}/entities/${entity}/preview?${params.toString()}`
+    `${ENDPOINTS.PREVIEW(datasourceId, namespace, entity)}?${params.toString()}`
   );
 };
