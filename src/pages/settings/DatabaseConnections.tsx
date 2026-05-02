@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
-  listDatasources,
   createDatasource,
   activateDatasource,
   testDatasourceConnection,
@@ -10,7 +9,6 @@ import { useDatasource } from "@/contexts/DatasourceContext";
 import { Loader2 } from "lucide-react";
 import type {
   ConnectionEntryMode,
-  DatabaseConnection,
   ManualConnectionPayload,
   ParsedConnectionPreview,
   SslMode,
@@ -37,12 +35,10 @@ const initialUrlForm: UrlConnectionPayload = {
 };
 
 export default function DatabaseConnections() {
-  const { refreshDatasources } = useDatasource();
+  const { datasources, isLoading, refreshDatasources } = useDatasource();
   const [mode, setMode] = useState<ConnectionEntryMode>("url");
-  const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [manualForm, setManualForm] = useState<ManualConnectionPayload>(initialManualForm);
   const [urlForm, setUrlForm] = useState<UrlConnectionPayload>(initialUrlForm);
-  const [isLoading, setIsLoading] = useState(true);
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -52,23 +48,6 @@ export default function DatabaseConnections() {
     () => parseConnectionPreview(urlForm.connectionUrl),
     [urlForm.connectionUrl],
   );
-
-  useEffect(() => {
-    void loadConnections();
-  }, []);
-
-  async function loadConnections() {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await listDatasources();
-      setConnections(data);
-    } catch (loadError: any) {
-      setError(loadError.message || "Failed to load connections.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   function getActivePayload() {
     return mode === "url" ? urlForm : manualForm;
@@ -97,7 +76,6 @@ export default function DatabaseConnections() {
       setManualForm(initialManualForm);
       setUrlForm(initialUrlForm);
       setMessage("Connection saved successfully.");
-      await loadConnections();
       await refreshDatasources(); // Sync global state
     } catch (saveError: any) {
       setError(saveError.message || "Failed to save connection.");
@@ -112,7 +90,6 @@ export default function DatabaseConnections() {
     try {
       await activateDatasource(id);
       setMessage("Connection activated.");
-      await loadConnections();
       await refreshDatasources(); // Sync global state
     } catch (activateError: any) {
       setError(activateError.message || "Failed to activate connection.");
@@ -123,7 +100,6 @@ export default function DatabaseConnections() {
     if (!confirm("Are you sure you want to delete this connection?")) return;
     try {
       await deleteDatasource(id);
-      await loadConnections();
       await refreshDatasources();
     } catch (err: any) {
       setError(err.message || "Failed to delete connection");
@@ -142,8 +118,8 @@ export default function DatabaseConnections() {
       {(message || error) && (
         <div
           className={`rounded-2xl border px-6 py-4 text-sm font-bold shadow-sm transition-all animate-in fade-in slide-in-from-top-4 ${error
-              ? "border-error/20 bg-error/5 text-error"
-              : "border-primary/20 bg-primary/5 text-primary"
+            ? "border-error/20 bg-error/5 text-error"
+            : "border-primary/20 bg-primary/5 text-primary"
             }`}
         >
           <div className="flex items-center gap-3">
@@ -159,7 +135,7 @@ export default function DatabaseConnections() {
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em]">Active Fleet</h2>
             <span className="text-[10px] font-bold text-outline uppercase bg-surface-container px-2 py-0.5 rounded">
-              {connections.length} TOTAL
+              {datasources.length} TOTAL
             </span>
           </div>
 
@@ -169,18 +145,18 @@ export default function DatabaseConnections() {
                 <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary opacity-20" />
                 <p className="mt-4 text-xs font-bold text-outline uppercase tracking-widest">Enlisting connections...</p>
               </div>
-            ) : connections.length === 0 ? (
+            ) : datasources.length === 0 ? (
               <div className="p-12 text-center bg-surface-container-lowest rounded-2xl border border-surface-container-high border-dashed">
                 <span className="material-symbols-outlined text-5xl text-outline opacity-20">cloud_off</span>
                 <p className="mt-4 text-sm font-medium text-on-surface-variant">No connections established yet.</p>
               </div>
             ) : (
-              connections.map((connection) => (
+              datasources.map((connection) => (
                 <div
                   key={connection.id}
                   className={`rounded-2xl border-2 p-6 transition-all shadow-sm ${connection.isActive
-                      ? "border-primary bg-primary/[0.02] shadow-primary/5"
-                      : "border-surface-container-high bg-surface-container-lowest hover:border-outline-variant/30"
+                    ? "border-primary bg-primary/[0.02] shadow-primary/5"
+                    : "border-surface-container-high bg-surface-container-lowest hover:border-outline-variant/30"
                     }`}
                 >
                   <div className="flex items-start justify-between gap-6">
@@ -217,8 +193,8 @@ export default function DatabaseConnections() {
                     <div className="flex flex-col gap-2">
                       <button
                         className={`rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${connection.isActive
-                            ? "bg-surface-container text-outline cursor-default"
-                            : "bg-primary text-on-primary shadow-lg shadow-primary/10 hover:scale-105 active:scale-95"
+                          ? "bg-surface-container text-outline cursor-default"
+                          : "bg-primary text-on-primary shadow-lg shadow-primary/10 hover:scale-105 active:scale-95"
                           }`}
                         disabled={connection.isActive}
                         onClick={() => void handleActivateConnection(connection.id)}
@@ -267,8 +243,8 @@ export default function DatabaseConnections() {
             <div className="mb-4 flex rounded-2xl bg-surface-container-highest p-1 shadow-inner">
               <button
                 className={`flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${mode === "url"
-                    ? "bg-surface text-primary shadow-md"
-                    : "text-on-surface-variant hover:text-on-surface"
+                  ? "bg-surface text-primary shadow-md"
+                  : "text-on-surface-variant hover:text-on-surface"
                   }`}
                 onClick={() => setMode("url")}
               >
@@ -276,8 +252,8 @@ export default function DatabaseConnections() {
               </button>
               <button
                 className={`flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${mode === "manual"
-                    ? "bg-surface text-primary shadow-md"
-                    : "text-on-surface-variant hover:text-on-surface"
+                  ? "bg-surface text-primary shadow-md"
+                  : "text-on-surface-variant hover:text-on-surface"
                   }`}
                 onClick={() => setMode("manual")}
               >
@@ -371,8 +347,8 @@ export default function DatabaseConnections() {
                         }))
                       }
                     >
-                      {["disable", "require", "verify-full"].map((ssl) => (
-                        <option key={ssl} value={ssl}>{ssl}</option>
+                      {["disable", "require", "verify_full", "verify_ca"].map((ssl) => (
+                        <option key={ssl} value={ssl}>{ssl.replace('_', ' ')}</option>
                       ))}
                     </select>
                   </Field>
@@ -473,6 +449,10 @@ function parseSslMode(value: string | null): SslMode {
     case "verify_ca":
     case "verify_full":
       return value;
+    case "verify-full":
+      return "verify_full";
+    case "verify-ca":
+      return "verify_ca";
     default:
       return "require";
   }
