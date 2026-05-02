@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import TopNavBar from "@/components/layout/TopNavBar";
 import { useDatasource } from "@/contexts/DatasourceContext";
 import { listNamespaces, listEntities } from "@/services/explorer.service";
@@ -103,18 +110,22 @@ export default function TableView() {
 
       <section className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-surface-container-high bg-background shrink-0">
         <div className="flex items-center gap-3">
-          <select
-            className="rounded-lg bg-surface-container-low px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
+          <Select
             value={selectedNamespace}
-            onChange={(e) => handleNamespaceChange(e.target.value)}
+            onValueChange={handleNamespaceChange}
             disabled={isLoadingNamespaces}
           >
-            {namespaces.map((ns) => (
-              <option key={ns.name} value={ns.name}>
-                {ns.name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 min-w-[140px] rounded-xl bg-surface-container-low border-none">
+              <SelectValue placeholder="Namespace" />
+            </SelectTrigger>
+            <SelectContent>
+              {namespaces.map((ns) => (
+                <SelectItem key={ns.name} value={ns.name}>
+                  {ns.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <div className="h-6 w-px bg-surface-container-high mx-1" />
 

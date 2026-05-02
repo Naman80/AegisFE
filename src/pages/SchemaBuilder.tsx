@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import TopNavBar from "@/components/layout/TopNavBar";
 import { useDatasource } from "@/contexts/DatasourceContext";
 import { listNamespaces, listEntities } from "@/services/explorer.service";
@@ -100,18 +107,22 @@ export default function SchemaBuilder() {
             <div className="text-[10px] font-bold uppercase tracking-widest text-outline mb-2">
               Namespace
             </div>
-            <select
-              className="w-full rounded-lg bg-surface-container px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary/30"
+            <Select
               value={selectedNamespace}
-              onChange={(e) => setSelectedNamespace(e.target.value)}
+              onValueChange={setSelectedNamespace}
               disabled={isLoadingNamespaces}
             >
-              {namespaces.map((ns) => (
-                <option key={ns.name} value={ns.name}>
-                  {ns.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-9 rounded-xl bg-surface-container border-none">
+                <SelectValue placeholder="Namespace" />
+              </SelectTrigger>
+              <SelectContent>
+                {namespaces.map((ns) => (
+                  <SelectItem key={ns.name} value={ns.name}>
+                    {ns.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 py-3 space-y-1">

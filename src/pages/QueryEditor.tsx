@@ -10,6 +10,13 @@ import * as monaco from "monaco-editor";
 import { Group, Panel } from "react-resizable-panels";
 import TopNavBar from "@/components/layout/TopNavBar";
 import ResultsTable from "@/components/features/QueryEditor/ResultsTable";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
 import { useDatasource } from "@/contexts/DatasourceContext";
 import { listNamespaces } from "@/services/explorer.service";
 import { getBulkSchema } from "@/services/schema.service";
@@ -140,15 +147,21 @@ export default function QueryEditor() {
                 <span className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] px-1">
                   Namespace
                 </span>
-                <select 
-                  className="w-full bg-surface-container-low border-none rounded-xl px-3 py-2 text-xs font-bold text-on-surface focus:ring-1 focus:ring-primary/20"
+                <Select
                   value={selectedNamespace}
-                  onChange={(e) => setSelectedNamespace(e.target.value)}
+                  onValueChange={setSelectedNamespace}
                 >
-                  {namespaces.map(ns => (
-                    <option key={ns} value={ns}>{ns}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-9 rounded-xl bg-surface-container-low text-xs">
+                    <SelectValue placeholder="Namespace" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {namespaces.map((ns) => (
+                      <SelectItem key={ns} value={ns}>
+                        {ns}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
              </div>
           </div>
           

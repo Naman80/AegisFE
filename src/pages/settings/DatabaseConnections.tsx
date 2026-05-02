@@ -153,7 +153,7 @@ export default function DatabaseConnections() {
         </div>
       )}
 
-      <section className="grid gap-10 lg:grid-cols-[1fr_400px]">
+      <section className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] items-start">
         {/* Left: Saved Connections */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -197,9 +197,11 @@ export default function DatabaseConnections() {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-mono text-on-surface-variant/70 font-medium">
-                          <span className="material-symbols-outlined text-xs">link</span>
-                          {connection.username}@{connection.host}:{connection.port}/{connection.database}
+                        <div className="flex items-center gap-2 text-[11px] font-mono text-on-surface-variant/70 font-medium max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-lg">
+                          <span className="material-symbols-outlined text-[10px] shrink-0">link</span>
+                          <span className="break-all leading-relaxed">
+                            {connection.username}@{connection.host}:{connection.port}/{connection.database}
+                          </span>
                         </div>
                         <div className="mt-3 flex gap-2">
                           <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-surface-container rounded-lg text-outline-variant border border-surface-container-high">
@@ -249,20 +251,20 @@ export default function DatabaseConnections() {
         </div>
 
         {/* Right: New Connection Form */}
-        <aside className="space-y-6">
-          <div className="bg-surface-container-low rounded-3xl p-8 border border-surface-container-high shadow-xl shadow-surface-container/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-              <span className="material-symbols-outlined text-8xl">add_link</span>
+        <aside className="space-y-5 lg:sticky lg:top-6 h-fit max-w-[380px]">
+          <div className="bg-surface-container-low rounded-3xl p-5 border border-surface-container-high shadow-xl shadow-surface-container/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-5 pointer-events-none">
+              <span className="material-symbols-outlined text-6xl">add_link</span>
             </div>
 
-            <div className="mb-8">
-              <h2 className="text-xl font-black text-on-surface tracking-tight mb-2">Deploy Connection</h2>
-              <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">
+            <div className="mb-4">
+              <h2 className="text-base font-black text-on-surface tracking-tight mb-1">Deploy Connection</h2>
+              <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60 leading-relaxed">
                 Aegis stores encrypted metadata for multiple providers.
               </p>
             </div>
 
-            <div className="mb-8 flex rounded-2xl bg-surface-container-highest p-1.5 shadow-inner">
+            <div className="mb-4 flex rounded-2xl bg-surface-container-highest p-1 shadow-inner">
               <button
                 className={`flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all ${mode === "url"
                     ? "bg-surface text-primary shadow-md"
@@ -284,10 +286,10 @@ export default function DatabaseConnections() {
             </div>
 
             {mode === "url" ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <Field label="Alias">
                   <input
-                    className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20 placeholder:opacity-30"
+                    className="w-full rounded-xl bg-surface-container border-none px-3 py-2.5 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20 placeholder:opacity-30"
                     value={urlForm.name}
                     onChange={(event) => setUrlForm((current) => ({ ...current, name: event.target.value }))}
                     placeholder="e.g. Primary Cluster"
@@ -296,7 +298,7 @@ export default function DatabaseConnections() {
 
                 <Field label="URL Protocol">
                   <textarea
-                    className="min-h-24 w-full rounded-xl bg-surface-container border-none px-4 py-4 text-xs font-bold text-on-surface font-mono focus:ring-2 focus:ring-primary/20 resize-none shadow-inner"
+                    className="min-h-20 w-full rounded-xl bg-surface-container border-none px-3 py-3 text-xs font-bold text-on-surface font-mono focus:ring-2 focus:ring-primary/20 resize-none shadow-inner"
                     value={urlForm.connectionUrl}
                     onChange={(event) =>
                       setUrlForm((current) => ({ ...current, connectionUrl: event.target.value }))
@@ -318,27 +320,27 @@ export default function DatabaseConnections() {
                 )}
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <Field label="Alias">
                   <input
-                    className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-xl bg-surface-container border-none px-3 py-2.5 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
                     value={manualForm.name}
                     onChange={(event) => setManualForm((current) => ({ ...current, name: event.target.value }))}
                     placeholder="Production DB"
                   />
                 </Field>
 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                   <Field label="Host Structure">
                     <div className="flex gap-2">
                       <input
-                        className="flex-1 rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                        className="flex-1 rounded-xl bg-surface-container border-none px-3 py-2.5 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
                         value={manualForm.host}
                         onChange={(event) => setManualForm((current) => ({ ...current, host: event.target.value }))}
                         placeholder="localhost"
                       />
                       <input
-                        className="w-24 rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                        className="w-20 rounded-xl bg-surface-container border-none px-3 py-2.5 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
                         type="number"
                         value={manualForm.port}
                         onChange={(event) =>
@@ -349,10 +351,10 @@ export default function DatabaseConnections() {
                   </Field>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <Field label="Database">
                     <input
-                      className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-xl bg-surface-container border-none px-3 py-2.5 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
                       value={manualForm.database}
                       onChange={(event) => setManualForm((current) => ({ ...current, database: event.target.value }))}
                       placeholder="postgres"
@@ -360,7 +362,7 @@ export default function DatabaseConnections() {
                   </Field>
                   <Field label="SSL">
                     <select
-                      className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-xs font-black uppercase text-on-surface focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-xl bg-surface-container border-none px-3 py-2.5 text-[10px] font-black uppercase text-on-surface focus:ring-2 focus:ring-primary/20"
                       value={manualForm.sslMode}
                       onChange={(event) =>
                         setManualForm((current) => ({
@@ -376,17 +378,17 @@ export default function DatabaseConnections() {
                   </Field>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <Field label="Username">
                     <input
-                      className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-xl bg-surface-container border-none px-3 py-2.5 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
                       value={manualForm.username}
                       onChange={(event) => setManualForm((current) => ({ ...current, username: event.target.value }))}
                     />
                   </Field>
                   <Field label="Password">
                     <input
-                      className="w-full rounded-xl bg-surface-container border-none px-4 py-3 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-xl bg-surface-container border-none px-3 py-2.5 text-sm font-bold text-on-surface focus:ring-2 focus:ring-primary/20"
                       type="password"
                       value={manualForm.password}
                       onChange={(event) => setManualForm((current) => ({ ...current, password: event.target.value }))}
@@ -396,7 +398,7 @@ export default function DatabaseConnections() {
               </div>
             )}
 
-            <div className="mt-10">
+            <div className="mt-6">
               <button
                 className="w-full rounded-2xl bg-primary px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-on-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
                 disabled={isSaving}
@@ -425,7 +427,7 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block space-y-2">
+    <label className="block space-y-1.5">
       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-70 ml-1">
         {label}
       </span>
