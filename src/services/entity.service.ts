@@ -4,8 +4,8 @@ import type { Field } from '../types/normalization';
 const ENDPOINTS = {
   ENTITY_SCHEMA: (datasourceId: string, namespace: string, entity: string) => 
     `/datasources/${datasourceId}/namespaces/${namespace}/entities/${entity}/schema`,
-  BULK_SCHEMA: (datasourceId: string, namespace: string) => 
-    `/datasources/${datasourceId}/namespaces/${namespace}/entities/schema/bulk`,
+  ALL_ENTITY_SCHEMA: (datasourceId: string, namespace: string) => 
+    `/datasources/${datasourceId}/namespaces/${namespace}/entities/schema/all`,
   CREATE: (datasourceId: string, namespace: string) => 
     `/datasources/${datasourceId}/namespaces/${namespace}/entities`,
   ALTER: (datasourceId: string, namespace: string, entity: string) => 
@@ -18,8 +18,8 @@ export const getEntitySchema = (datasourceId: string, namespace: string, entity:
   return request<Field[]>(ENDPOINTS.ENTITY_SCHEMA(datasourceId, namespace, entity));
 };
 
-export const getBulkSchema = (datasourceId: string, namespace: string) => {
-  return request<Record<string, Field[]>>(ENDPOINTS.BULK_SCHEMA(datasourceId, namespace));
+export const getAllEntitySchema = (datasourceId: string, namespace: string) => {
+  return request<Record<string, { type: string; fields: Field[] }>>(ENDPOINTS.ALL_ENTITY_SCHEMA(datasourceId, namespace));
 };
 
 export const createEntity = (datasourceId: string, namespace: string, name: string, fields: any[]) => {

@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { previewEntity } from "@/services/query.service";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { previewEntity, executeQuery } from "@/services/query.service";
 
 export const useEntityPreview = (
   datasourceId: string | null,
@@ -12,5 +12,12 @@ export const useEntityPreview = (
     queryKey: ["query", "preview", datasourceId, namespace, entity, limit, offset],
     queryFn: () => previewEntity(datasourceId!, namespace!, entity!, limit, offset),
     enabled: !!datasourceId && !!namespace && !!entity,
+  });
+};
+
+export const useExecuteQuery = () => {
+  return useMutation({
+    mutationFn: ({ datasourceId, input }: { datasourceId: string; input: any }) =>
+      executeQuery(datasourceId, input),
   });
 };

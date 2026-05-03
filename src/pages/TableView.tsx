@@ -10,12 +10,12 @@ import {
 } from "@/components/ui/Select";
 import TopNavBar from "@/components/layout/TopNavBar";
 import { useDatasource } from "@/contexts/DatasourceContext";
-import { useNamespaces, useEntities } from "@/hooks/queries/useExplorerQueries";
+import { useNamespaces } from "@/hooks/queries/useExplorerQueries";
+import { useAllEntitySchema } from "@/hooks/queries/useEntityQueries";
 import { useEntityPreview } from "@/hooks/queries/useQueryQueries";
-import type { Namespace, Entity, QueryResult } from "@/types/normalization";
+import type { Namespace, Entity, QueryResult, Field } from "@/types/normalization";
 
-// --- Sub-components ---
-
+// View header component
 function ViewHeader({
   namespaces,
   selectedNamespace,
@@ -88,6 +88,7 @@ function ViewHeader({
   );
 }
 
+// Entity list component
 function EntitySidebar({
   entities,
   selectedEntity,
@@ -137,14 +138,17 @@ function EntitySidebar({
   );
 }
 
+// Data table component
 function DataTable({
+  entityName,
   rowsResult,
-  selectedEntity,
+  fields,
   isLoading,
-  activeDatasourceId
+  activeDatasourceId,
 }: {
+  entityName: string | null;
   rowsResult: QueryResult | null;
-  selectedEntity: string | null;
+  fields: Field[];
   isLoading: boolean;
   activeDatasourceId: string | null;
 }) {
@@ -165,24 +169,22 @@ function DataTable({
       </div>
 
       <div className="flex-1 overflow-auto">
-        {isLoading ? (
-          <div className="p-12 flex flex-col items-center justify-center gap-4 text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl animate-spin text-primary/40">progress_activity</span>
-            <span className="text-sm font-medium animate-pulse">Fetching records...</span>
-          </div>
-        ) : !selectedEntity ? (
+        {!entityName ? (
           <div className="p-12 flex flex-col items-center justify-center gap-4 text-outline opacity-40">
             <span className="material-symbols-outlined text-5xl">table_chart</span>
             <span className="text-sm font-medium">Select an entity to view data</span>
           </div>
-        ) : !rowsResult || rowsResult.columns.length === 0 ? (
-          <div className="p-12 text-center text-on-surface-variant italic">No data available for this entity.</div>
+        ) : isLoading && fields.length === 0 ? (
+          <div className="p-12 flex flex-col items-center justify-center gap-4 text-on-surface-variant">
+            <span className="material-symbols-outlined text-4xl animate-spin text-primary/40">progress_activity</span>
+            <span className="text-sm font-medium animate-pulse">Fetching structure...</span>
+          </div>
         ) : (
           <div className="relative">
             <table className="w-full min-w-full border-collapse text-left text-xs">
               <thead className="sticky top-0 bg-surface-container-lowest z-10 border-b border-surface-container-high shadow-sm">
                 <tr>
-                  {rowsResult.columns.map((column) => (
+                  {(rowsResult?.columns || fields.map(f => f.name)).map((column) => (
                     <th
                       key={column}
                       className="px-4 py-3 font-bold uppercase tracking-widest text-on-surface-variant border-r border-surface-container-high/50 last:border-r-0"
@@ -193,15 +195,33 @@ function DataTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-container-high/30">
-                {rowsResult.rows.map((row, rowIndex) => (
-                  <tr key={rowIndex} className="hover:bg-primary/[0.02] transition-colors">
-                    {rowsResult.columns.map((column) => (
-                      <td key={`${rowIndex}-${column}`} className="px-4 py-2.5 align-top text-on-surface font-medium border-r border-surface-container-high/20 last:border-r-0 max-w-[240px] truncate">
-                        {formatCellValue(row[column])}
-                      </td>
-                    ))}
+                {isLoading ? (
+                  [...Array(12)].map((_, i) => (
+                    <tr key={i} className="hover:bg-primary/[0.01] transition-colors">
+                      {(rowsResult?.columns || fields.map(f => f.name)).map((column) => (
+                        <td key={`${i}-${column}`} className="px-4 py-3 border-r border-surface-container-high/20 last:border-r-0">
+                          <div className="h-3 bg-surface-container-high rounded-full animate-pulse w-full opacity-60" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : !rowsResult || rowsResult.rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={rowsResult?.columns.length || fields.length} className="p-12 text-center text-on-surface-variant italic">
+                      No data available for this entity.
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  rowsResult.rows.map((row, rowIndex) => (
+                    <tr key={rowIndex} className="hover:bg-primary/[0.02] transition-colors">
+                      {rowsResult.columns.map((column) => (
+                        <td key={`${rowIndex}-${column}`} className="px-4 py-2.5 align-top text-on-surface font-medium border-r border-surface-container-high/20 last:border-r-0 max-w-[240px] truncate">
+                          {formatCellValue(row[column])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -228,11 +248,11 @@ function formatCellValue(value: unknown) {
 }
 
 // --- Main Component ---
+// Table view component main container
 
 export default function TableView() {
   const { activeDatasourceId } = useDatasource();
 
-  // Queries
   const {
     data: namespaces = [],
     isLoading: isLoadingNamespaces,
@@ -244,11 +264,11 @@ export default function TableView() {
   const [selectedNamespace, setSelectedNamespace] = useState(namespaces?.[0]?.name);
 
   const {
-    data: entities = [],
-    isLoading: isLoadingEntities,
-    error: entityError,
-    refetch: refetchEntities
-  } = useEntities(activeDatasourceId, selectedNamespace);
+    data: allSchema = {},
+    isLoading: isLoadingSchema,
+    error: schemaError,
+    refetch: refetchSchema
+  } = useAllEntitySchema(activeDatasourceId, selectedNamespace);
 
   const {
     data: rowsResult = null,
@@ -257,11 +277,24 @@ export default function TableView() {
     refetch: refetchRows
   } = useEntityPreview(activeDatasourceId, selectedNamespace, selectedEntity);
 
+  // Derive entities from allSchema
+  const entities = useMemo(() => {
+    return Object.entries(allSchema).map(([name, data]) => ({
+      name,
+      namespace: selectedNamespace,
+      type: data.type as any
+    }));
+  }, [allSchema, selectedNamespace]);
+
   // Labels
   const entityLabel = useMemo(
     () => (selectedEntity ? `${selectedNamespace}.${selectedEntity}` : "No entity selected"),
     [selectedNamespace, selectedEntity],
   );
+
+  const fields = useMemo(() => {
+    return selectedEntity ? allSchema[selectedEntity]?.fields || [] : [];
+  }, [allSchema, selectedEntity]);
 
   // Auto-selection Logic
   useEffect(() => {
@@ -284,7 +317,7 @@ export default function TableView() {
     setSelectedEntity(null);
   }, [activeDatasourceId]);
 
-  const error = namespaceError || entityError || rowError;
+  const error = namespaceError || schemaError || rowError;
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
@@ -296,9 +329,9 @@ export default function TableView() {
         onNamespaceChange={setSelectedNamespace}
         entityLabel={entityLabel}
         isLoadingNamespaces={isLoadingNamespaces}
-        isLoadingEntities={isLoadingEntities}
+        isLoadingEntities={isLoadingSchema}
         isLoadingRows={isLoadingRows}
-        onRefreshList={() => refetchEntities()}
+        onRefreshList={() => refetchSchema()}
         onRefreshData={() => refetchRows()}
         canRefreshData={!!selectedEntity}
       />
@@ -314,12 +347,13 @@ export default function TableView() {
           entities={entities}
           selectedEntity={selectedEntity}
           onEntityClick={setSelectedEntity}
-          isLoading={isLoadingEntities}
+          isLoading={isLoadingSchema}
         />
 
         <DataTable
           rowsResult={rowsResult}
-          selectedEntity={selectedEntity}
+          entityName={selectedEntity}
+          fields={fields}
           isLoading={isLoadingRows}
           activeDatasourceId={activeDatasourceId}
         />

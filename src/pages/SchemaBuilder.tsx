@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/Select";
 import TopNavBar from "@/components/layout/TopNavBar";
 import { useDatasource } from "@/contexts/DatasourceContext";
-import { useNamespaces, useEntities } from "@/hooks/queries/useExplorerQueries";
-import { useEntityFields } from "@/hooks/queries/useSchemaQueries";
+import { useNamespaces } from "@/hooks/queries/useExplorerQueries";
+import { useAllEntitySchema } from "@/hooks/queries/useEntityQueries";
 import type { Namespace, Entity, Field } from "@/types/normalization";
 
 // --- Sub-components ---
@@ -247,21 +247,27 @@ export default function SchemaBuilder() {
   } = useNamespaces(activeDatasourceId);
 
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
-
   const [selectedNamespace, setSelectedNamespace] = useState(namespaces?.[0]?.name);
 
   const {
-    data: entities = [],
-    isLoading: isLoadingEntities,
-    error: entityError
-  } = useEntities(activeDatasourceId, selectedNamespace);
+    data: allSchema = {},
+    isLoading: isLoadingSchema,
+    error: schemaError,
+    refetch: refetchSchema
+  } = useAllEntitySchema(activeDatasourceId, selectedNamespace);
 
-  const {
-    data: fields = [],
-    isLoading: isLoadingFields,
-    error: fieldError,
-    refetch: refetchFields
-  } = useEntityFields(activeDatasourceId, selectedNamespace, selectedEntity);
+  // Derive entities and current fields from the allSchema object
+  const entities = useMemo(() => {
+    return Object.entries(allSchema).map(([name, data]) => ({
+      name,
+      namespace: selectedNamespace,
+      type: data.type as any
+    }));
+  }, [allSchema, selectedNamespace]);
+
+  const fields = useMemo(() => {
+    return selectedEntity ? allSchema[selectedEntity]?.fields || [] : [];
+  }, [allSchema, selectedEntity]);
 
   // Auto-selection Logic
   useEffect(() => {
@@ -284,7 +290,7 @@ export default function SchemaBuilder() {
     setSelectedEntity(null);
   }, [activeDatasourceId]);
 
-  const error = namespaceError || entityError || fieldError;
+  const error = namespaceError || schemaError;
 
   return (
     <div className="flex flex-col w-full h-full relative bg-background">
@@ -308,7 +314,7 @@ export default function SchemaBuilder() {
             entities={entities}
             selectedEntity={selectedEntity}
             onSelect={setSelectedEntity}
-            isLoading={isLoadingEntities}
+            isLoading={isLoadingSchema}
           />
         </aside>
 
@@ -326,8 +332,8 @@ export default function SchemaBuilder() {
               entityName={selectedEntity}
               namespace={selectedNamespace}
               fields={fields}
-              isLoading={isLoadingFields}
-              onRefresh={() => refetchFields()}
+              isLoading={isLoadingSchema}
+              onRefresh={() => refetchSchema()}
             />
           </div>
         </main>
