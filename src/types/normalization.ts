@@ -22,5 +22,6 @@ export interface QueryResult {
   columns: string[];
   rows: Record[];
   totalCount: number;
-  timeMs?: number;
+  timeMs: number;
+  truncated: boolean;
 }

@@ -3,7 +3,7 @@ import type { QueryResult } from '../types/normalization';
 
 const ENDPOINTS = {
   EXECUTE: (datasourceId: string) => `/datasources/${datasourceId}/query`,
-  PREVIEW: (datasourceId: string, namespace: string, entity: string) => 
+  PREVIEW: (datasourceId: string, namespace: string, entity: string) =>
     `/datasources/${datasourceId}/namespaces/${namespace}/entities/${entity}/preview`,
 };
 
@@ -13,6 +13,7 @@ export const executeQuery = (datasourceId: string, input: {
   query: string;
   limit?: number;
   offset?: number;
+  timeout?: number;
 }) => {
   return request<QueryResult>(ENDPOINTS.EXECUTE(datasourceId), {
     method: 'POST',
@@ -24,12 +25,12 @@ export const previewEntity = (
   datasourceId: string,
   namespace: string,
   entity: string,
-  limit = 50,
-  offset = 0
+  page = 1,
+  pageSize = 50
 ) => {
   const params = new URLSearchParams({
-    limit: limit.toString(),
-    offset: offset.toString(),
+    page: page.toString(),
+    pageSize: pageSize.toString(),
   });
   return request<QueryResult>(
     `${ENDPOINTS.PREVIEW(datasourceId, namespace, entity)}?${params.toString()}`

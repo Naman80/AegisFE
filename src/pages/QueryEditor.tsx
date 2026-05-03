@@ -289,8 +289,11 @@ function ResultsPanel({
           {activeTab?.result && (
             <div className="flex items-center gap-3">
               <span className="w-px h-3 bg-outline/20" />
-              <span className="text-[10px] text-on-surface-variant font-bold font-mono bg-surface-container px-2 py-0.5 rounded">
+              <span className="text-[10px] text-on-surface-variant font-bold font-mono bg-surface-container px-2 py-0.5 rounded flex items-center gap-2">
                 {activeTab.result.rows.length} ROWS • {activeTab.result.timeMs}ms
+                {activeTab.result.truncated && (
+                  <span className="text-error bg-error/10 px-1 rounded animate-pulse ml-1">TRUNCATED</span>
+                )}
               </span>
             </div>
           )}
@@ -388,8 +391,6 @@ export default function QueryEditor() {
     if (!activeDatasourceId || !selectedNamespace || !activeTab) return;
 
     updateTab(activeTabId, { executionState: "running" });
-    const startTime = Date.now();
-
     executeMutation.mutate({
       datasourceId: activeDatasourceId,
       input: {
@@ -400,10 +401,7 @@ export default function QueryEditor() {
       onSuccess: (result: QueryResult) => {
         updateTab(activeTabId, {
           executionState: "success",
-          result: {
-            ...result,
-            timeMs: Date.now() - startTime
-          },
+          result: result,
           lastExecutedAt: new Date().toLocaleTimeString(),
         });
       },

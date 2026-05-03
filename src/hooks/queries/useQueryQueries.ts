@@ -5,12 +5,12 @@ export const useEntityPreview = (
   datasourceId: string | null,
   namespace: string | null,
   entity: string | null,
-  limit = 50,
-  offset = 0
+  page = 1,
+  pageSize = 50
 ) => {
   return useQuery({
-    queryKey: ["query", "preview", datasourceId, namespace, entity, limit, offset],
-    queryFn: () => previewEntity(datasourceId!, namespace!, entity!, limit, offset),
+    queryKey: ["query", "preview", datasourceId, namespace, entity, page, pageSize],
+    queryFn: () => previewEntity(datasourceId!, namespace!, entity!, page, pageSize),
     enabled: !!datasourceId && !!namespace && !!entity,
   });
 };
